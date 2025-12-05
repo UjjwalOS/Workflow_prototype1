@@ -1,0 +1,32 @@
+/*
+ * =============================================
+ * MAIN CSS FILE
+ * =============================================
+ *
+ * This file imports all the other CSS files in the correct order.
+ * Think of it as the "table of contents" for your styles.
+ *
+ * ORDER MATTERS! Load in this order:
+ * 1. Tokens (variables) - must be first so other files can use them
+ * 2. Base - resets and fundamental styles
+ * 3. Components - reusable building blocks
+ * 4. Layout - page structure
+ * 5. Feature-specific styles
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons+Outlined');
+
+/* Core */
+@import url('./tokens.css');
+@import url('./base.css');
+@import url('./components.css');
+@import url('./layout.css');
+
+/* Features */
+@import url('./sections.css');
+@import url('./tasks.css');
+@import url('./comments.css');
+@import url('./events.css');
+@import url('./chat.css');
+@import url('./modals.css');

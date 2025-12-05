@@ -1,0 +1,371 @@
+/*
+ * =============================================
+ * TASKS & ACTION ITEMS
+ * =============================================
+ *
+ * Different views of tasks based on user role:
+ * - AO: Interactive checkboxes
+ * - CS: Progress tracking
+ * - EA: Summary view
+ */
+
+/* ---------------------------------------------
+   INTERACTIVE TASKS (AO View)
+   --------------------------------------------- */
+
+.task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.task-item:last-child {
+    border-bottom: none;
+}
+
+.task-checkbox {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--gray-300);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    background: white;
+}
+
+.task-checkbox:hover {
+    border-color: var(--primary);
+}
+
+.task-checkbox.checked {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.task-checkbox.checked .material-icons-outlined {
+    color: white;
+    font-size: 16px;
+}
+
+.task-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-800);
+}
+
+.task-item.completed .task-title {
+    text-decoration: line-through;
+    color: var(--gray-500);
+}
+
+.task-meta {
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-top: 2px;
+}
+
+/* ---------------------------------------------
+   PROGRESS TRACKING (CS View)
+   --------------------------------------------- */
+
+.progress-tracker {
+    padding: 4px 0;
+}
+
+.progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.progress-stats {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.progress-bar-container {
+    height: 8px;
+    background: var(--gray-200);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success) 0%, #22c55e 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+}
+
+.progress-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.progress-indicator.done {
+    background: var(--success);
+    color: white;
+}
+
+.progress-indicator.done .material-icons-outlined {
+    font-size: 14px;
+}
+
+.progress-indicator.pending {
+    background: transparent;
+    border: 2px solid var(--gray-300);
+}
+
+.progress-task-title {
+    font-size: 13px;
+    color: var(--gray-700);
+}
+
+.progress-item.done .progress-task-title {
+    color: var(--gray-500);
+}
+
+.progress-assignee {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--gray-100);
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+.progress-assignee-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 600;
+    color: white;
+}
+
+/* ---------------------------------------------
+   SUMMARY VIEW (EA View)
+   --------------------------------------------- */
+
+.tasks-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+}
+
+.tasks-summary-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--purple-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--purple);
+}
+
+.tasks-summary-text {
+    font-size: 13px;
+    color: var(--gray-700);
+}
+
+.tasks-summary-text strong {
+    color: var(--gray-900);
+}
+
+/* ---------------------------------------------
+   TASK INPUT (Modal)
+   --------------------------------------------- */
+
+.task-input-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.task-input-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.task-input-item input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+}
+
+.task-input-item input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.task-remove-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--gray-400);
+    cursor: pointer;
+}
+
+.task-remove-btn:hover {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.add-task-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
+    background: var(--gray-50);
+    border: 1px dashed var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--gray-600);
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.add-task-btn:hover {
+    background: var(--gray-100);
+    border-color: var(--gray-400);
+}
+
+/* Completed Tasks Display */
+.completed-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.completed-task {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--success-light);
+    border-radius: var(--radius-sm);
+}
+
+.completed-task .material-icons-outlined {
+    color: var(--success);
+    font-size: 18px;
+}
+
+.completed-task span {
+    font-size: 13px;
+    color: var(--gray-700);
+}
+
+/* Task Summary in Send Modal */
+.task-summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.task-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.task-summary-item.completed {
+    background: var(--success-light);
+    border-color: #bbf7d0;
+}
+
+.task-summary-item.incomplete {
+    background: #fef3c7;
+    border-color: #fcd34d;
+}
+
+.task-summary-title {
+    flex: 1;
+    font-size: 13px;
+    color: var(--gray-700);
+}
+
+.task-summary-item.incomplete .task-summary-title {
+    text-decoration: none;
+}
+
+.task-summary-status {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.task-summary-status.completed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.task-summary-status.incomplete {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.task-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 12px;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: #92400e;
+    line-height: 1.5;
+}
+
+.task-warning .material-icons-outlined {
+    font-size: 18px;
+    color: #d97706;
+    flex-shrink: 0;
+}

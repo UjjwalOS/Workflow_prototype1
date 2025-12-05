@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDMS v6 - Document Workflow Management</title>
+
+    <!-- Main CSS (imports all other stylesheets) -->
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+    <!-- ==========================================
+         MAIN APPLICATION LAYOUT
+         ========================================== -->
+    <div class="app">
+
+        <!-- ==========================================
+             LEFT SIDEBAR
+             ========================================== -->
+        <aside class="sidebar">
+            <!-- Logo -->
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">ID</div>
+                    IDMS v6
+                </div>
+                <button class="reset-btn" onclick="resetDemo()">
+                    <span class="material-icons-outlined" style="font-size:14px">refresh</span>
+                    Reset
+                </button>
+            </div>
+
+            <!-- Search -->
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <span class="material-icons-outlined">search</span>
+                    <input type="text" class="search-input" id="search-input" placeholder="Search cases...">
+                    <span class="search-shortcut">⌘K</span>
+                </div>
+            </div>
+
+            <!-- Role Switcher (for demo) -->
+            <div class="role-section">
+                <div class="role-label">View As Role</div>
+                <div class="role-selector" id="role-selector">
+                    <!-- Rendered by JavaScript -->
+                </div>
+                <div class="current-role-info" id="current-role-info">
+                    <!-- Rendered by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Document Queue -->
+            <div class="queue-section">
+                <div class="queue-title">
+                    <span class="material-icons-outlined" style="font-size:16px">inbox</span>
+                    Your Queue
+                </div>
+                <div id="document-queue">
+                    <!-- Rendered by JavaScript -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- ==========================================
+             MAIN CONTENT AREA
+             ========================================== -->
+        <main class="main-content">
+
+            <!-- Document Viewer -->
+            <div class="doc-viewer">
+                <!-- Document Tabs -->
+                <div class="doc-header">
+                    <div class="doc-tabs" id="doc-tabs">
+                        <!-- Rendered by JavaScript -->
+                    </div>
+                    <div style="display:flex;gap:8px">
+                        <button class="doc-control-btn">
+                            <span class="material-icons-outlined" style="font-size:16px">zoom_in</span>
+                            100%
+                        </button>
+                        <button class="doc-control-btn">
+                            <span class="material-icons-outlined" style="font-size:16px">download</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Document Body -->
+                <div class="doc-body">
+                    <div class="doc-page" id="doc-page-content">
+                        <!-- Rendered by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 RIGHT PANEL (Details)
+                 ========================================== -->
+            <aside class="details-panel">
+                <!-- Panel Tabs -->
+                <div class="panel-header">
+                    <div class="panel-tabs">
+                        <button class="panel-tab active" data-tab="details">Details</button>
+                        <button class="panel-tab" data-tab="event-log">Activity</button>
+                        <button class="panel-tab" data-tab="documents">Documents</button>
+                        <button class="panel-tab" data-tab="ask-ai">Ask AI</button>
+                    </div>
+                </div>
+
+                <!-- Panel Body -->
+                <div class="panel-body">
+                    <!-- Quick Actions -->
+                    <div class="quick-actions" id="quick-actions">
+                        <!-- Rendered by JavaScript -->
+                    </div>
+
+                    <!-- Details Tab -->
+                    <div class="tab-pane active" id="details-tab">
+                        <!-- Rendered by JavaScript -->
+                    </div>
+
+                    <!-- Event Log Tab -->
+                    <div class="tab-pane" id="event-log-tab">
+                        <!-- Rendered by JavaScript -->
+                    </div>
+
+                    <!-- Documents Tab -->
+                    <div class="tab-pane" id="documents-tab">
+                        <!-- Rendered by JavaScript -->
+                    </div>
+
+                    <!-- Ask AI Tab -->
+                    <div class="tab-pane" id="ask-ai-tab">
+                        <!-- Rendered by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="action-bar" id="action-bar">
+                    <!-- Rendered by JavaScript -->
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- ==========================================
+         MODALS
+         ========================================== -->
+
+    <!-- Send Modal -->
+    <div class="modal-overlay" id="send-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="send-modal-title">Send Document</h2>
+                <button class="modal-close" onclick="closeModal('send-modal')">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body" id="send-modal-body">
+                <!-- Rendered by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('send-modal')">Cancel</button>
+                <button class="btn btn-primary" id="send-modal-submit" onclick="submitSend()">
+                    <span class="material-icons-outlined" style="font-size:18px">send</span>
+                    Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal-overlay" id="upload-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Upload Document</h2>
+                <button class="modal-close" onclick="closeModal('upload-modal')">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area" onclick="simulateFileSelect()">
+                    <span class="material-icons-outlined upload-icon">cloud_upload</span>
+                    <p class="upload-text">Click to select a file</p>
+                    <p class="upload-hint">PDF, Word, or Excel files</p>
+                </div>
+                <div class="form-group" style="margin-top:20px">
+                    <label class="form-label">Document Name</label>
+                    <input type="text" class="form-input" id="upload-name" placeholder="Enter document name...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('upload-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitUpload()">
+                    <span class="material-icons-outlined" style="font-size:18px">upload</span>
+                    Upload
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Close Case Modal -->
+    <div class="modal-overlay" id="close-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Close Case</h2>
+                <button class="modal-close" onclick="closeModal('close-modal')">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="close-case-summary">
+                    <span class="material-icons-outlined close-case-icon">verified</span>
+                    <h3 class="close-case-title">Ready to Close</h3>
+                    <p class="close-case-desc">This case will be marked as completed and archived.</p>
+                </div>
+                <div class="case-summary">
+                    <div class="summary-row">
+                        <span class="summary-label">Case ID</span>
+                        <span class="summary-value">CASE-2025-0847</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Title</span>
+                        <span class="summary-value">Budget Proposal 2025</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Status</span>
+                        <span class="summary-value" style="color:var(--success)">Approved</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('close-modal')">Cancel</button>
+                <button class="btn btn-success" onclick="submitClose()">
+                    <span class="material-icons-outlined" style="font-size:18px">check_circle</span>
+                    Close Case
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         JAVASCRIPT FILES
+         Order matters! Load in this sequence:
+         1. config.js - Constants and settings
+         2. state.js - Application state
+         3. render-*.js - Rendering functions
+         4. events.js - Event handlers
+         5. modals.js - Modal logic
+         6. chat.js - AI chat
+         7. app.js - Initialization (must be last)
+         ========================================== -->
+    <script src="js/config.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/render-sections.js"></script>
+    <script src="js/render-tabs.js"></script>
+    <script src="js/render-documents.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/modals.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+</html>

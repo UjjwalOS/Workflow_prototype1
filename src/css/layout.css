@@ -1,0 +1,524 @@
+/*
+ * =============================================
+ * LAYOUT
+ * =============================================
+ *
+ * The main structural components of the page:
+ * - Sidebar (left navigation)
+ * - Main Content (document viewer)
+ * - Details Panel (right sidebar)
+ */
+
+/* ---------------------------------------------
+   SIDEBAR
+   --------------------------------------------- */
+
+.sidebar {
+    width: 280px;
+    background: white;
+    border-right: 1px solid var(--gray-200);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+/* Sidebar Header with Logo */
+.sidebar-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.logo-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* Search Box */
+.search-box {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.search-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    transition: all 0.15s;
+}
+
+.search-input-wrapper:focus-within {
+    background: white;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.search-input-wrapper .material-icons-outlined {
+    font-size: 18px;
+    color: var(--gray-400);
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    outline: none;
+}
+
+.search-shortcut {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--gray-400);
+    background: var(--gray-200);
+    padding: 2px 5px;
+    border-radius: 4px;
+}
+
+/* Role Selector Section */
+.role-section {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--gray-50);
+}
+
+.role-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-500);
+    margin-bottom: 10px;
+}
+
+.role-selector {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.role-avatar-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 2px solid transparent;
+    position: relative;
+}
+
+.role-avatar-btn:hover {
+    transform: scale(1.1);
+}
+
+.role-avatar-btn.active {
+    border-color: var(--gray-900);
+    box-shadow: 0 0 0 2px white, 0 0 0 4px var(--gray-900);
+}
+
+.role-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--danger);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+}
+
+.current-role-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+}
+
+.current-role-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+}
+
+.current-role-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.current-role-title {
+    font-size: 11px;
+    color: var(--gray-500);
+}
+
+/* Queue Section */
+.queue-section {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.queue-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.queue-empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--gray-400);
+}
+
+.queue-empty-icon {
+    font-size: 40px;
+    margin-bottom: 8px;
+}
+
+.queue-item {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.queue-item:hover {
+    border-color: var(--gray-300);
+    box-shadow: var(--shadow-sm);
+}
+
+.queue-item.active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.queue-priority {
+    width: 4px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.queue-priority.high {
+    background: var(--danger);
+}
+.queue-priority.medium {
+    background: var(--warning);
+}
+.queue-priority.low {
+    background: var(--success);
+}
+
+.queue-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.queue-doc-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 4px;
+}
+
+.queue-doc-meta {
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-bottom: 8px;
+}
+
+/* ---------------------------------------------
+   MAIN CONTENT AREA
+   --------------------------------------------- */
+
+.main-content {
+    flex: 1;
+    display: flex;
+    min-width: 0;
+}
+
+/* Document Viewer */
+.doc-viewer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: #525659;
+}
+
+.doc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: #3c3f42;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.doc-tabs {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+}
+
+.doc-tab {
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: rgba(255,255,255,0.7);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+}
+
+.doc-tab:hover {
+    background: rgba(255,255,255,0.15);
+    color: white;
+}
+
+.doc-tab.active {
+    background: var(--primary);
+    color: white;
+}
+
+.doc-control-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: rgba(255,255,255,0.8);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.doc-control-btn:hover {
+    background: rgba(255,255,255,0.2);
+    color: white;
+}
+
+.doc-body {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px;
+    overflow: auto;
+    background: #e5e7eb;
+}
+
+.doc-page {
+    background: white;
+    width: 100%;
+    max-width: 800px;
+    padding: 60px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.05);
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+/* Document Page Typography */
+.doc-page h1 {
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.doc-page .subtitle {
+    font-size: 14px;
+    color: var(--gray-500);
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.doc-page h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 32px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--gray-200);
+}
+
+.doc-page p {
+    font-size: 14px;
+    color: var(--gray-700);
+    margin-bottom: 12px;
+    line-height: 1.7;
+}
+
+.doc-page ul {
+    margin: 12px 0 12px 24px;
+}
+
+.doc-page li {
+    font-size: 14px;
+    color: var(--gray-700);
+    margin-bottom: 8px;
+}
+
+.doc-page table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13px;
+}
+
+.doc-page th,
+.doc-page td {
+    padding: 10px 12px;
+    text-align: left;
+    border: 1px solid var(--gray-200);
+}
+
+.doc-page th {
+    background: var(--gray-100);
+    font-weight: 600;
+}
+
+/* ---------------------------------------------
+   DETAILS PANEL (Right Sidebar)
+   --------------------------------------------- */
+
+.details-panel {
+    width: 400px;
+    background: white;
+    border-left: 1px solid var(--gray-200);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.panel-header {
+    display: flex;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--gray-50);
+}
+
+.panel-tabs {
+    display: flex;
+    gap: 4px;
+}
+
+.panel-tab {
+    padding: 8px 14px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.panel-tab:hover {
+    color: var(--gray-700);
+    background: white;
+}
+
+.panel-tab.active {
+    background: white;
+    color: var(--gray-900);
+    box-shadow: var(--shadow-sm);
+}
+
+.panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+/* Action Bar (Bottom of Panel) */
+.action-bar {
+    padding: 16px;
+    background: white;
+    border-top: 1px solid var(--gray-200);
+}
+
+.action-bar-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    color: var(--gray-600);
+}

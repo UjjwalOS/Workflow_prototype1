@@ -1,0 +1,730 @@
+/*
+ * =============================================
+ * SECTIONS & CONTENT AREAS
+ * =============================================
+ *
+ * Collapsible sections, banners, and specialized content areas
+ */
+
+/* ---------------------------------------------
+   COLLAPSIBLE SECTIONS
+   --------------------------------------------- */
+
+.section-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.section-card.highlight {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary-light);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.section-header:hover {
+    background: var(--gray-50);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.section-count {
+    background: var(--gray-200);
+    color: var(--gray-600);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 100px;
+}
+
+.section-toggle {
+    color: var(--gray-400);
+    transition: transform 0.2s;
+}
+
+.section-card.expanded .section-toggle {
+    transform: rotate(180deg);
+}
+
+.section-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--primary-light);
+    border: none;
+    border-radius: 6px;
+    color: var(--primary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.section-action-btn:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.section-action-btn .material-icons-outlined {
+    font-size: 16px;
+}
+
+.section-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.section-card.expanded .section-content {
+    max-height: 2000px;
+}
+
+.section-body {
+    padding: 0 16px 16px;
+}
+
+.see-all-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px;
+    margin-top: 8px;
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--primary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.see-all-link:hover {
+    background: var(--primary-light);
+}
+
+/* ---------------------------------------------
+   BANNERS
+   --------------------------------------------- */
+
+/* Pending Action Banner */
+.banner-pending {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #fcd34d;
+    border-radius: var(--radius-lg);
+    margin-bottom: 12px;
+}
+
+.banner-pending-icon {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--warning);
+    flex-shrink: 0;
+}
+
+.banner-pending-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.banner-pending-subtitle {
+    font-size: 12px;
+    color: var(--gray-600);
+    margin-top: 2px;
+}
+
+/* Work Assigned Banner (AO specific) */
+.banner-work-assigned {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, var(--primary-light) 0%, #dbeafe 100%);
+    border: 1px solid #93c5fd;
+    border-radius: var(--radius-lg);
+    margin-bottom: 12px;
+}
+
+.banner-work-assigned .banner-icon {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+/* Closed Case Banner */
+.banner-closed {
+    background: var(--success-light);
+    border: 1px solid #86efac;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    padding: 24px;
+    margin-bottom: 12px;
+}
+
+.banner-closed .material-icons-outlined {
+    font-size: 48px;
+    color: var(--success);
+    margin-bottom: 8px;
+    display: block;
+}
+
+.banner-closed h3 {
+    font-size: 18px;
+    color: var(--success);
+    margin-bottom: 4px;
+}
+
+.banner-closed p {
+    font-size: 13px;
+    color: var(--gray-600);
+}
+
+/* ---------------------------------------------
+   CURRENT HOLDER CARD
+   --------------------------------------------- */
+
+.current-holder {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+}
+
+.current-holder:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.current-holder:hover .holder-hint {
+    opacity: 1;
+}
+
+.holder-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    flex-shrink: 0;
+}
+
+.holder-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.holder-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.holder-role {
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+.holder-you-badge {
+    background: var(--primary);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 100px;
+}
+
+.holder-hint {
+    position: absolute;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--primary);
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+/* ---------------------------------------------
+   AI SUMMARY
+   --------------------------------------------- */
+
+.ai-summary {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.ai-summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.ai-summary-header:hover {
+    background: var(--gray-50);
+}
+
+.ai-summary-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.ai-summary-title .material-icons-outlined {
+    color: var(--purple);
+}
+
+.ai-summary-content {
+    padding: 0 16px 16px;
+    font-size: 13px;
+    color: var(--gray-700);
+    line-height: 1.7;
+    display: none;
+}
+
+.ai-summary.expanded .ai-summary-content {
+    display: block;
+}
+
+.expand-icon {
+    color: var(--gray-400);
+    transition: transform 0.2s;
+}
+
+.ai-summary.expanded .expand-icon {
+    transform: rotate(180deg);
+}
+
+.ask-ai-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    margin-top: 12px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.ask-ai-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* ---------------------------------------------
+   DEADLINE WARNINGS
+   --------------------------------------------- */
+
+.deadline-warning {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+    padding: 2px 8px;
+    background: var(--danger-light);
+    color: var(--danger);
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 100px;
+}
+
+.deadline-warning.warning {
+    background: var(--warning-light);
+    color: #b45309;
+}
+
+.status-value.deadline-danger {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.status-value.deadline-warning {
+    color: #b45309;
+}
+
+/* ---------------------------------------------
+   PRIORITY DROPDOWN
+   --------------------------------------------- */
+
+.priority-dropdown {
+    position: relative;
+    cursor: pointer;
+}
+
+.priority-dropdown .priority-badge {
+    cursor: pointer;
+}
+
+.priority-dropdown .priority-badge:hover {
+    opacity: 0.8;
+}
+
+.priority-options {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+    display: none;
+    min-width: 120px;
+}
+
+.priority-options.show {
+    display: block;
+}
+
+.priority-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.priority-option:hover {
+    background: var(--gray-50);
+}
+
+.priority-option.active {
+    background: var(--gray-100);
+}
+
+.priority-option:first-child {
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.priority-option:last-child {
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+/* ---------------------------------------------
+   DUE DATE PICKER
+   --------------------------------------------- */
+
+.due-date-editable {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 4px 8px;
+    margin: -4px -8px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s;
+}
+
+.due-date-editable:hover {
+    background: var(--gray-100);
+}
+
+.due-date-editable .edit-icon {
+    font-size: 14px;
+    color: var(--gray-400);
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.due-date-editable:hover .edit-icon {
+    opacity: 1;
+}
+
+.due-date-picker {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+    display: none;
+    padding: 8px;
+}
+
+.due-date-picker.show {
+    display: block;
+}
+
+.due-date-picker input[type="date"] {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    outline: none;
+    cursor: pointer;
+}
+
+.due-date-picker input[type="date"]:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* ---------------------------------------------
+   DOCUMENT SECTIONS
+   --------------------------------------------- */
+
+.doc-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.doc-section {
+    margin-bottom: 24px;
+}
+
+.doc-section:last-child {
+    margin-bottom: 0;
+}
+
+/* Submission Group */
+.submission-group {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.submission-group-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.submission-sender-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.submission-sender-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.submission-sender-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.submission-sender-meta {
+    font-size: 12px;
+    color: var(--gray-500);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.submission-context {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--gray-500);
+    padding: 4px 10px;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 100px;
+}
+
+.submission-context .material-icons-outlined {
+    font-size: 14px;
+}
+
+/* Revision Badge */
+.doc-revision-badge {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--gray-500);
+    padding: 2px 6px;
+    background: var(--gray-100);
+    border-radius: 4px;
+}
+
+/* Previous Submissions */
+.previous-submissions {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--gray-300);
+}
+
+.previous-submissions-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--gray-500);
+    cursor: pointer;
+    padding: 8px 0;
+    transition: color 0.15s;
+}
+
+.previous-submissions-header:hover {
+    color: var(--gray-700);
+}
+
+.previous-submissions-header .material-icons-outlined {
+    font-size: 18px;
+    transition: transform 0.2s;
+}
+
+.previous-submissions.expanded .previous-submissions-header .material-icons-outlined {
+    transform: rotate(180deg);
+}
+
+.previous-submissions-list {
+    display: none;
+    margin-top: 8px;
+}
+
+.previous-submissions.expanded .previous-submissions-list {
+    display: block;
+}
+
+.previous-doc-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.previous-doc-item:hover {
+    border-color: var(--gray-300);
+    background: var(--gray-50);
+}
+
+.previous-doc-item .material-icons-outlined {
+    font-size: 18px;
+    color: var(--gray-400);
+}
+
+.previous-doc-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.previous-doc-status {
+    font-size: 10px;
+    color: var(--gray-500);
+    padding: 2px 8px;
+    background: var(--gray-100);
+    border-radius: 4px;
+}
+
+/* Document Source */
+.doc-source {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-top: 6px;
+}
+
+.doc-source-avatar {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 8px;
+    font-weight: 600;
+}

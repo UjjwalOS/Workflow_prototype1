@@ -1,0 +1,51 @@
+/*
+ * =============================================
+ * DESIGN TOKENS
+ * =============================================
+ *
+ * These are the "building blocks" of your design system.
+ * Think of them like paint colors in your palette - you define
+ * them once here, then use them everywhere else.
+ *
+ * To change a color throughout the app, just change it here!
+ */
+
+:root {
+    /* Primary Brand Colors */
+    --primary: #2563eb;           /* Main blue - used for buttons, links, highlights */
+    --primary-hover: #1d4ed8;     /* Darker blue - when you hover over primary elements */
+    --primary-light: #eff6ff;     /* Very light blue - backgrounds, highlights */
+
+    /* Status Colors - Used to communicate meaning */
+    --success: #16a34a;           /* Green - completed, approved, positive */
+    --success-light: #f0fdf4;     /* Light green background */
+    --warning: #f59e0b;           /* Orange - needs attention, pending */
+    --warning-light: #fffbeb;     /* Light orange background */
+    --danger: #dc2626;            /* Red - errors, urgent, rejected */
+    --danger-light: #fef2f2;      /* Light red background */
+    --purple: #7c3aed;            /* Purple - AI features, special highlights */
+    --purple-light: #f5f3ff;      /* Light purple background */
+
+    /* Gray Scale - For text, borders, and backgrounds */
+    --gray-50: #f9fafb;           /* Almost white - subtle backgrounds */
+    --gray-100: #f3f4f6;          /* Light gray - input backgrounds */
+    --gray-200: #e5e7eb;          /* Light gray - borders */
+    --gray-300: #d1d5db;          /* Medium gray - disabled states */
+    --gray-400: #9ca3af;          /* Medium gray - placeholder text */
+    --gray-500: #6b7280;          /* Dark gray - secondary text */
+    --gray-600: #4b5563;          /* Dark gray - body text */
+    --gray-700: #374151;          /* Very dark gray - headings */
+    --gray-800: #1f2937;          /* Near black - primary text */
+    --gray-900: #111827;          /* Almost black - bold text */
+
+    /* Border Radius - How rounded corners are */
+    --radius-sm: 6px;             /* Small - buttons, inputs */
+    --radius-md: 8px;             /* Medium - cards, dropdowns */
+    --radius-lg: 12px;            /* Large - modals, panels */
+    --radius-xl: 16px;            /* Extra large - modals */
+
+    /* Shadows - Depth and elevation */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+}

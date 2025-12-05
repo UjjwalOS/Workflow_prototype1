@@ -1,0 +1,17 @@
+{
+  "name": "idms-v6",
+  "version": "1.0.0",
+  "description": "IDMS v6 - Integrated Document Management System with Role-Based Views",
+  "scripts": {
+    "start": "npx live-server src --port=3000 --open",
+    "build": "echo 'No build step needed - static files ready in src/'",
+    "lint": "echo 'Install eslint for JS linting'"
+  },
+  "keywords": [
+    "document-management",
+    "workflow",
+    "government"
+  ],
+  "author": "",
+  "license": "MIT"
+}

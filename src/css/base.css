@@ -1,0 +1,95 @@
+/*
+ * =============================================
+ * BASE STYLES
+ * =============================================
+ *
+ * These are the foundation styles that apply to all elements.
+ * We "reset" the browser defaults to have a consistent starting point.
+ */
+
+/* Reset - Remove browser default margins and use border-box sizing */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body - The main container for everything */
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--gray-100);
+    color: var(--gray-800);
+    line-height: 1.5;
+    height: 100vh;
+    overflow: hidden;  /* Prevents page-level scrolling */
+}
+
+/* App Container - Full height flexbox layout */
+.app {
+    display: flex;
+    height: 100vh;
+}
+
+/* Form Elements */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 8px;
+}
+
+.form-helper {
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-top: 6px;
+}
+
+.form-select,
+.form-input,
+.form-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    background: white;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--gray-800);
+    transition: all 0.15s;
+}
+
+.form-select:focus,
+.form-input:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.form-divider {
+    height: 1px;
+    background: var(--gray-200);
+    margin: 20px 0;
+}

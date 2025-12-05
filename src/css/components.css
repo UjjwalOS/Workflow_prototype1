@@ -1,0 +1,716 @@
+/*
+ * =============================================
+ * COMPONENTS
+ * =============================================
+ *
+ * Reusable UI components - buttons, badges, cards, etc.
+ * These can be used anywhere in the app.
+ */
+
+/* ---------------------------------------------
+   BUTTONS
+   --------------------------------------------- */
+
+/* Primary Button - Main action */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.btn-secondary {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+.btn-secondary:hover {
+    background: var(--gray-200);
+}
+
+.btn-success {
+    background: var(--success);
+    color: white;
+}
+.btn-success:hover {
+    background: #15803d;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+.btn-danger:hover {
+    background: #b91c1c;
+}
+
+/* Primary Action Button - Full width, prominent */
+.primary-action {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 8px;
+}
+
+.primary-action:hover {
+    background: var(--primary-hover);
+}
+
+.primary-action.success {
+    background: var(--success);
+}
+.primary-action.success:hover {
+    background: #15803d;
+}
+
+/* Secondary Actions Container */
+.secondary-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.secondary-action {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 14px;
+    background: var(--gray-100);
+    color: var(--gray-700);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.secondary-action:hover {
+    background: var(--gray-200);
+}
+
+.secondary-action.success {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.secondary-action.danger {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+/* Reset Button */
+.reset-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.reset-btn:hover {
+    background: var(--danger-light);
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.reset-btn:active {
+    transform: scale(0.97);
+}
+
+/* ---------------------------------------------
+   BADGES & STATUS INDICATORS
+   --------------------------------------------- */
+
+.priority-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.priority-badge.high {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+.priority-badge.medium {
+    background: var(--warning-light);
+    color: #b45309;
+}
+.priority-badge.low {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.priority-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* Document Status Badges */
+.doc-status {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.doc-status.original {
+    background: var(--primary);
+    color: white;
+}
+.doc-status.draft {
+    background: var(--gray-100);
+    color: var(--gray-600);
+    border: 1px solid var(--gray-200);
+}
+.doc-status.submitted {
+    background: var(--success-light);
+    color: var(--success);
+}
+.doc-status.received {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+.doc-status.revision {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+/* New Badge - Animated */
+.doc-badge-new {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    background: #fef3c7;
+    color: #b45309;
+    border-radius: 4px;
+    animation: gentle-pulse 2s infinite;
+}
+
+.doc-badge-new::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    background: #f59e0b;
+    border-radius: 50%;
+}
+
+@keyframes gentle-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Queue Status Badge */
+.queue-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 100px;
+    background: var(--warning-light);
+    color: #b45309;
+}
+
+/* ---------------------------------------------
+   CARDS
+   --------------------------------------------- */
+
+/* Status Card */
+.status-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 4px 16px;
+    margin-bottom: 12px;
+}
+
+.status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    min-height: 44px;
+}
+
+.status-row:not(:last-child) {
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.status-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-500);
+}
+
+.status-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+    text-align: right;
+}
+
+/* Document Card */
+.document-card {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 10px;
+}
+
+.document-card:last-child {
+    margin-bottom: 0;
+}
+
+.document-card:hover {
+    border-color: var(--gray-300);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+}
+
+.document-card.active {
+    border-color: var(--primary);
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.02) 0%, rgba(37, 99, 235, 0.04) 100%);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.document-card.original {
+    border-left: 3px solid var(--primary);
+}
+
+.document-card.has-new {
+    border-left: 3px solid #f59e0b;
+}
+
+/* Doc Icon */
+.doc-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.doc-icon.pdf {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    color: #dc2626;
+}
+.doc-icon.excel {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    color: #16a34a;
+}
+.doc-icon.word {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    color: #2563eb;
+}
+
+.doc-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.doc-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 4px;
+}
+
+.doc-meta {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-bottom: 8px;
+}
+
+.doc-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.doc-action-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.doc-action-btn:hover {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Smaller Doc Card (for sections) */
+.doc-card {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.doc-card:last-child {
+    margin-bottom: 0;
+}
+
+.doc-card:hover {
+    border-color: var(--gray-300);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+}
+
+.doc-card.active {
+    border-color: var(--primary);
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.02) 0%, rgba(37, 99, 235, 0.04) 100%);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.doc-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.doc-card-icon.pdf {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    color: #dc2626;
+}
+.doc-card-icon.excel {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    color: #16a34a;
+}
+.doc-card-icon.word {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    color: #2563eb;
+}
+
+.doc-card-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.doc-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.doc-card-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-900);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+}
+
+.doc-card-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.doc-card-badge.original {
+    background: var(--primary);
+    color: white;
+}
+.doc-card-badge.draft {
+    background: var(--gray-100);
+    color: var(--gray-600);
+    border: 1px solid var(--gray-200);
+}
+.doc-card-badge.submitted {
+    background: var(--success-light);
+    color: var(--success);
+}
+.doc-card-badge.received {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+.doc-card-badge.revision {
+    background: #fef3c7;
+    color: #b45309;
+}
+.doc-card-badge.new {
+    background: #fef3c7;
+    color: #b45309;
+    animation: gentle-pulse 2s infinite;
+}
+
+.doc-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+.doc-card-actions {
+    position: absolute;
+    right: 12px;
+    bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transform: translateX(4px);
+    transition: all 0.15s ease;
+}
+
+.doc-card:hover .doc-card-actions {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.doc-card.active .doc-card-actions {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.doc-card-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.doc-card-action-btn:hover {
+    background: var(--primary-light);
+    border-color: var(--primary);
+}
+
+.doc-card-action-btn .material-icons-outlined {
+    font-size: 16px;
+    color: var(--gray-600);
+}
+
+.doc-card-action-btn:hover .material-icons-outlined {
+    color: var(--primary);
+}
+
+.doc-card-viewing {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--primary);
+    padding: 4px 8px;
+    background: var(--primary-light);
+    border-radius: 4px;
+}
+
+.doc-card-viewing::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--primary);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ---------------------------------------------
+   TOOLTIPS
+   --------------------------------------------- */
+
+.tooltip {
+    position: relative;
+}
+
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 10px;
+    background: var(--gray-900);
+    color: white;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    border-radius: var(--radius-sm);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.15s;
+    margin-bottom: 6px;
+    z-index: 100;
+}
+
+.tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ---------------------------------------------
+   EMPTY STATES
+   --------------------------------------------- */
+
+.empty-state {
+    text-align: center;
+    padding: 20px;
+    color: var(--gray-400);
+    font-size: 13px;
+}
+
+.doc-empty-state {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--gray-400);
+}
+
+.doc-empty-state .material-icons-outlined {
+    font-size: 40px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.doc-empty-state-text {
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.doc-empty-state-hint {
+    font-size: 12px;
+    color: var(--gray-400);
+}
+
+/* ---------------------------------------------
+   TOAST NOTIFICATIONS
+   --------------------------------------------- */
+
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: var(--gray-900);
+    color: white;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    animation: slideIn 0.3s ease;
+}
+
+.toast.success {
+    background: var(--success);
+}
+
+.toast.error {
+    background: var(--danger);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
