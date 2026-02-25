@@ -17,11 +17,12 @@
 // Shows what action is expected from the current holder
 
 function renderPendingBanner() {
-    const requester = ROLES[state.caseInfo.pendingFrom];
+    const requester = getAOInfo(state.caseInfo.pendingFrom) || ROLES[state.caseInfo.pendingFrom];
     const role = state.currentRole;
+    const isHolder = state.caseInfo.currentHolder === state.currentRole;
 
     // AO gets special "Work Assigned" banner
-    if (role === 'ao' && state.caseInfo.pendingAction === 'delegation') {
+    if (isAORole(role) && state.caseInfo.pendingAction === 'delegation') {
         const taskCount = state.actionItems.length;
         const incomplete = state.actionItems.filter(t => !t.completed).length;
 
@@ -37,6 +38,31 @@ function renderPendingBanner() {
                 <div>
                     <div class="banner-pending-title">Work Assigned to You</div>
                     <div class="banner-pending-subtitle">${incomplete} of ${taskCount} tasks remaining • From ${requester.name}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Approval banner with Approve/Reject buttons (if enabled in config)
+    if (state.caseInfo.pendingAction === 'approve' && isHolder && UI_CONFIG.approvalButtons.showInBanner) {
+        return `
+            <div class="banner-approval-requested">
+                <div class="banner-icon">
+                    <span class="material-icons-outlined">check_circle</span>
+                </div>
+                <div class="banner-approval-content">
+                    <div class="banner-pending-title">Approval Requested</div>
+                    <div class="banner-pending-subtitle">Review and decide • From ${requester.name}</div>
+                </div>
+                <div class="banner-approval-actions">
+                    <button class="btn btn-approve" onclick="handleApprove()">
+                        <span class="material-icons-outlined" style="font-size:18px">check_circle</span>
+                        Approve
+                    </button>
+                    <button class="btn btn-reject" onclick="handleReject()">
+                        <span class="material-icons-outlined" style="font-size:18px">cancel</span>
+                        Reject
+                    </button>
                 </div>
             </div>
         `;
@@ -118,78 +144,9 @@ function renderAISummary() {
 
 function renderCommentsSection() {
     const commentsExpanded = state.sectionStates.comments;
-    const showAllComments = state.showAllComments;
-    const displayComments = showAllComments ? state.comments : state.comments.slice(0, 2);
-    const hasMoreComments = state.comments.length > 2;
-
-    // Comment input state
-    const { recipient, text, dropdownOpen, highlightedIndex, linkedDocId } = state.commentInput;
-    const recipientRole = recipient ? ROLES[recipient] : null;
-    const currentUser = ROLES[state.currentRole];
-    const recipients = Object.keys(ROLES).filter(id => id !== state.currentRole);
-    const linkedDoc = linkedDocId ? findDocument(linkedDocId) : null;
-    const canSend = recipient && text.trim().length > 0;
-
-    // Build comment input HTML
-    const commentInputHTML = `
-        <div class="comment-input-area">
-            ${linkedDoc ? `
-                <div class="comment-linked-indicator">
-                    <span class="material-icons-outlined" style="font-size:14px">attach_file</span>
-                    Re: ${linkedDoc.name}
-                    <button onclick="clearLinkedDoc()" title="Remove">
-                        <span class="material-icons-outlined" style="font-size:14px">close</span>
-                    </button>
-                </div>
-            ` : ''}
-            <div class="comment-to-row">
-                <label class="comment-to-label">To:</label>
-                <div class="comment-recipient-dropdown">
-                    <button class="comment-recipient-btn" onclick="toggleRecipientDropdown()">
-                        ${recipientRole ? `
-                            <div class="recipient-btn-avatar" style="background:${recipientRole.color}">${recipientRole.initials}</div>
-                            <span class="recipient-btn-name">${recipientRole.name}</span>
-                        ` : `
-                            <span class="recipient-btn-placeholder">Select recipient</span>
-                        `}
-                        <span class="material-icons-outlined recipient-btn-arrow">expand_more</span>
-                    </button>
-                    ${dropdownOpen ? `
-                        <div class="recipient-dropdown-menu">
-                            ${recipients.map((roleId, i) => {
-                                const role = ROLES[roleId];
-                                return `
-                                    <div class="recipient-dropdown-option ${i === highlightedIndex ? 'highlighted' : ''}"
-                                         onclick="selectCommentRecipient('${roleId}')"
-                                         onmouseenter="highlightMentionOption(${i})">
-                                        <div class="recipient-option-avatar" style="background:${role.color}">${role.initials}</div>
-                                        <div class="recipient-option-info">
-                                            <div class="recipient-option-name">${role.name}</div>
-                                            <div class="recipient-option-title">${role.title}</div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
-            <textarea
-                id="comment-textarea"
-                class="comment-textarea"
-                placeholder="Write your comment..."
-                oninput="handleCommentInput(event)"
-                onkeydown="handleCommentKeydown(event)"
-            >${text}</textarea>
-            <div class="comment-input-footer">
-                <div></div>
-                <button class="comment-send-btn ${canSend ? 'enabled' : ''}" onclick="submitComment()">
-                    Send
-                    <span class="material-icons-outlined" style="font-size:16px">arrow_forward</span>
-                </button>
-            </div>
-        </div>
-    `;
+    // Overview preview: show max 3 recent comments (read-only, no input)
+    const previewComments = state.comments.slice(0, 3);
+    const totalCount = state.comments.length;
 
     return `
         <div class="section-card ${commentsExpanded ? 'expanded' : ''}" id="comments-section">
@@ -197,18 +154,17 @@ function renderCommentsSection() {
                 <div class="section-title">
                     <span class="material-icons-outlined" style="font-size:18px">chat_bubble_outline</span>
                     Comments
-                    <span class="section-count">${state.comments.length}</span>
+                    ${totalCount > 0 ? `<span class="section-count">${totalCount}</span>` : ''}
                 </div>
                 <span class="material-icons-outlined section-toggle">expand_more</span>
             </div>
             <div class="section-content">
-                ${commentInputHTML}
                 <div class="section-body">
-                    ${state.comments.length === 0
-                        ? '<div class="empty-state" style="text-align:center;padding:20px;color:var(--gray-400)">No messages yet. Start a conversation!</div>'
-                        : displayComments.map(c => {
-                            const author = ROLES[c.author];
-                            const commentRecipient = c.recipient ? ROLES[c.recipient] : null;
+                    ${totalCount === 0
+                        ? '<div class="empty-state" style="text-align:center;padding:20px;color:var(--gray-400)">No messages yet</div>'
+                        : previewComments.map(c => {
+                            const author = getAOInfo(c.author) || ROLES[c.author];
+                            const commentRecipient = c.recipient ? (getAOInfo(c.recipient) || ROLES[c.recipient]) : null;
                             const commentLinkedDoc = c.linkedDocId ? findDocument(c.linkedDocId) : null;
                             return `
                                 <div class="comment-item">
@@ -235,12 +191,10 @@ function renderCommentsSection() {
                                 </div>
                             `;
                         }).join('')}
-                    ${hasMoreComments && commentsExpanded ? `
-                        <div class="see-all-link" onclick="event.stopPropagation(); toggleShowAllComments()">
-                            <span class="material-icons-outlined" style="font-size:16px">${showAllComments ? 'expand_less' : 'expand_more'}</span>
-                            ${showAllComments ? 'Show less' : `Show all ${state.comments.length} comments`}
-                        </div>
-                    ` : ''}
+                    <div class="see-all-link" onclick="event.stopPropagation(); switchTab('comments')">
+                        <span class="material-icons-outlined" style="font-size:16px">open_in_new</span>
+                        ${totalCount > 3 ? `View all ${totalCount} comments` : 'View all comments'}
+                    </div>
                 </div>
             </div>
         </div>
@@ -253,27 +207,105 @@ function renderCommentsSection() {
 // Different views based on role
 
 function renderActionItemsSection() {
-    const roleConfig = ROLE_CONFIG[state.currentRole];
+    // For AO roles (ao2, ao3), fall back to the base 'ao' config
+    const roleConfig = ROLE_CONFIG[state.currentRole] || (isAORole(state.currentRole) ? ROLE_CONFIG['ao'] : null);
     const taskView = roleConfig.taskView;
-    const isHolder = state.caseInfo.currentHolder === state.currentRole;
 
-    // DTO: Hidden entirely
-    if (taskView === 'hidden') {
-        return '';
+    // ------------------------------------------
+    // NEW TASK SYSTEM (uses state.tasks)
+    // ------------------------------------------
+    // If new tasks exist, use the new card-based rendering
+    if (state.tasks.length > 0) {
+        if (isAORole(state.currentRole)) {
+            return renderAOTasksOverview();
+        }
+        if (state.currentRole === 'cs') {
+            return renderCSTasksOverview();
+        }
+        // DTO/EA (readonly): summary card in Overview tab
+        if (taskView === 'readonly') {
+            const counts = getTaskStatusCounts();
+            const tasksExpanded = state.sectionStates.actionItems;
+            return `
+                <div class="section-card ${tasksExpanded ? 'expanded' : ''}" id="tasks-section">
+                    <div class="section-header" onclick="toggleSection('actionItems')">
+                        <div class="section-title">
+                            <span class="material-icons-outlined" style="font-size:18px">assignment</span>
+                            Delegated Work
+                            <span class="section-count">${state.tasks.length}</span>
+                        </div>
+                        <span class="material-icons-outlined section-toggle">expand_more</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-body">
+                            <div class="tasks-summary">
+                                <div class="tasks-summary-icon">
+                                    <span class="material-icons-outlined">people</span>
+                                </div>
+                                <div class="tasks-summary-text">
+                                    <strong>${state.tasks.length} tasks</strong> delegated to Action Officers<br>
+                                    <span style="color:var(--gray-500)">
+                                        ${counts.completed} approved, ${counts.submitted} pending review, ${counts.in_progress} in progress
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
     }
 
-    // No tasks exist yet
-    if (state.actionItems.length === 0) {
+    // ------------------------------------------
+    // LEGACY FALLBACK (uses state.actionItems)
+    // ------------------------------------------
+    // For EA summary view, or if old-style tasks exist
+
+    // No tasks exist yet (neither new nor legacy)
+    if (state.actionItems.length === 0 && state.tasks.length === 0) {
         return '';
     }
 
     const completed = state.actionItems.filter(t => t.completed).length;
     const total = state.actionItems.length;
-    const percent = Math.round((completed / total) * 100);
+    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
     const tasksExpanded = state.sectionStates.actionItems;
 
-    // EA: Summary view
-    if (taskView === 'summary') {
+    // DTO/EA: Legacy summary view
+    if (taskView === 'readonly') {
+        if (state.tasks.length > 0) {
+            // Use new task data for EA summary
+            const counts = getTaskStatusCounts();
+            return `
+                <div class="section-card ${tasksExpanded ? 'expanded' : ''}" id="tasks-section">
+                    <div class="section-header" onclick="toggleSection('actionItems')">
+                        <div class="section-title">
+                            <span class="material-icons-outlined" style="font-size:18px">assignment</span>
+                            Delegated Work
+                            <span class="section-count">${state.tasks.length}</span>
+                        </div>
+                        <span class="material-icons-outlined section-toggle">expand_more</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-body">
+                            <div class="tasks-summary">
+                                <div class="tasks-summary-icon">
+                                    <span class="material-icons-outlined">people</span>
+                                </div>
+                                <div class="tasks-summary-text">
+                                    <strong>${state.tasks.length} tasks</strong> delegated to Action Officers<br>
+                                    <span style="color:var(--gray-500)">
+                                        ${counts.completed} approved, ${counts.submitted} pending review, ${counts.in_progress} in progress
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Legacy EA summary
         const ao = ROLES['ao'];
         return `
             <div class="section-card ${tasksExpanded ? 'expanded' : ''}" id="tasks-section">
@@ -298,107 +330,6 @@ function renderActionItemsSection() {
                                 </span>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    // CS: Progress tracking view
-    if (taskView === 'progress') {
-        const ao = ROLES['ao'];
-        const allDone = percent === 100;
-        return `
-            <div class="section-card ${tasksExpanded ? 'expanded' : ''}" id="tasks-section">
-                <div class="section-header" onclick="toggleSection('actionItems')">
-                    <div class="section-title">
-                        <span class="material-icons-outlined" style="font-size:18px">trending_up</span>
-                        Task Progress
-                        <span class="section-count" style="background:${allDone ? 'var(--success-light)' : 'var(--warning-light)'};color:${allDone ? 'var(--success)' : '#b45309'}">${percent}%</span>
-                    </div>
-                    <span class="material-icons-outlined section-toggle">expand_more</span>
-                </div>
-                <div class="section-content">
-                    <div class="section-body">
-                        <div class="progress-tracker">
-                            <div class="progress-bar-container">
-                                <div class="progress-bar-fill" style="width:${percent}%"></div>
-                            </div>
-                            ${state.actionItems.map(item => `
-                                <div class="progress-item ${item.completed ? 'done' : ''}">
-                                    <div class="progress-indicator ${item.completed ? 'done' : 'pending'}">
-                                        ${item.completed ? '<span class="material-icons-outlined">check</span>' : ''}
-                                    </div>
-                                    <span class="progress-task-title">${item.title}</span>
-                                </div>
-                            `).join('')}
-                            <div class="progress-assignee">
-                                <div class="progress-assignee-avatar" style="background:${ao.color}">${ao.initials}</div>
-                                <span>Assigned to <strong>${ao.name}</strong></span>
-                                ${!allDone ? '<span style="margin-left:auto;color:var(--warning);font-size:11px">In progress</span>' : '<span style="margin-left:auto;color:var(--success);font-size:11px">✓ Complete</span>'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    // AO: Interactive checkboxes
-    if (taskView === 'interactive') {
-        const incomplete = total - completed;
-        const showAll = state.showAllTasks;
-        const displayTasks = showAll ? state.actionItems : state.actionItems.slice(0, 3);
-        const hasMore = state.actionItems.length > 3;
-        const allDone = incomplete === 0;
-
-        const assignedBy = state.taskAssignment.assignedBy ? ROLES[state.taskAssignment.assignedBy] : null;
-        const assignedAt = state.taskAssignment.assignedAt || '';
-
-        return `
-            <div class="section-card ${tasksExpanded ? 'expanded' : ''}" id="tasks-section">
-                <div class="section-header" onclick="toggleSection('actionItems')">
-                    <div class="section-title">
-                        <span class="material-icons-outlined" style="font-size:18px">checklist</span>
-                        Your Tasks
-                        <span class="section-count" style="background:${allDone ? 'var(--success-light)' : 'var(--primary-light)'};color:${allDone ? 'var(--success)' : 'var(--primary)'}">
-                            ${allDone ? '✓ Done' : `${incomplete} remaining`}
-                        </span>
-                    </div>
-                    <span class="material-icons-outlined section-toggle">expand_more</span>
-                </div>
-                <div class="section-content">
-                    <div class="section-body">
-                        ${assignedBy ? `
-                            <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--gray-50);border-radius:var(--radius-md);margin-bottom:12px;font-size:12px;color:var(--gray-600)">
-                                <div style="width:24px;height:24px;border-radius:50%;background:${assignedBy.color};display:flex;align-items:center;justify-content:center;color:white;font-size:9px;font-weight:600">${assignedBy.initials}</div>
-                                Assigned by <strong>${assignedBy.name}</strong> • ${assignedAt}
-                            </div>
-                        ` : ''}
-                        ${allDone ? `
-                            <div style="text-align:center;padding:16px;background:var(--success-light);border-radius:var(--radius-md);margin-bottom:12px">
-                                <span class="material-icons-outlined" style="font-size:32px;color:var(--success)">task_alt</span>
-                                <p style="color:var(--success);font-weight:600;margin-top:4px">All tasks complete!</p>
-                                <p style="color:var(--gray-600);font-size:12px">Ready to submit to Chief Secretary</p>
-                            </div>
-                        ` : ''}
-                        ${displayTasks.map(item => `
-                            <div class="task-item ${item.completed ? 'completed' : ''}">
-                                <div class="task-checkbox ${item.completed ? 'checked' : ''}" onclick="toggleTask(${item.id})">
-                                    ${item.completed ? '<span class="material-icons-outlined">check</span>' : ''}
-                                </div>
-                                <div>
-                                    <div class="task-title">${item.title}</div>
-                                    <div class="task-meta">${item.completed ? '✓ Completed' : 'Click to mark complete'}</div>
-                                </div>
-                            </div>
-                        `).join('')}
-                        ${hasMore ? `
-                            <div class="see-all-link" onclick="event.stopPropagation(); toggleShowAllTasks()">
-                                <span class="material-icons-outlined" style="font-size:16px">${showAll ? 'expand_less' : 'expand_more'}</span>
-                                ${showAll ? 'Show less' : `Show all ${state.actionItems.length} tasks`}
-                            </div>
-                        ` : ''}
                     </div>
                 </div>
             </div>
@@ -439,7 +370,7 @@ function renderDocumentsSection() {
                     isNew: hasNewItems,
                     fromSubmission: true,
                     submissionId: latestSubmission.id,
-                    sender: ROLES[latestSubmission.submittedBy]
+                    sender: getAOInfo(latestSubmission.submittedBy) || ROLES[latestSubmission.submittedBy]
                 });
             });
             totalCount += latestSubmission.documents.length;
@@ -447,13 +378,13 @@ function renderDocumentsSection() {
         if (displayDocs.length < 3 && originalDoc) {
             displayDocs.push({ ...originalDoc, isOriginal: true });
         }
-    } else if (role === 'ao') {
+    } else if (isAORole(role)) {
         sectionTitle = 'Your Documents';
         sectionIcon = 'drive_file_move';
         drafts.slice(0, 2).forEach(doc => {
             displayDocs.push({ ...doc, isDraft: true });
         });
-        const mySubmission = submissions.filter(s => s.submittedBy === 'ao').sort((a, b) => b.round - a.round)[0];
+        const mySubmission = submissions.filter(s => s.submittedBy === role).sort((a, b) => b.round - a.round)[0];
         if (mySubmission && displayDocs.length < 2) {
             mySubmission.documents.slice(0, 2 - displayDocs.length).forEach(doc => {
                 displayDocs.push({
@@ -475,7 +406,7 @@ function renderDocumentsSection() {
     }
 
     const isHolder = state.caseInfo.currentHolder === state.currentRole;
-    const canUpload = isHolder && role === 'ao';
+    const canUpload = isHolder && isAORole(role);
     const uploadBtn = canUpload ? `
         <button class="section-action-btn" onclick="event.stopPropagation(); openModal('upload-modal')" title="Upload document">
             <span class="material-icons-outlined">upload_file</span>
@@ -515,7 +446,7 @@ function renderDocumentsSection() {
                             statusLabel = 'New';
                             statusClass = 'new';
                         } else if (doc.fromSubmission) {
-                            statusLabel = `From ${doc.sender.shortName}`;
+                            statusLabel = `From ${doc.sender?.name || 'Unknown'}`;
                             statusClass = 'received';
                         } else if (doc.isSubmitted) {
                             statusLabel = doc.status === 'returned' ? 'Needs Revision' : 'Submitted';

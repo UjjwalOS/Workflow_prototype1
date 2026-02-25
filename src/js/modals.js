@@ -14,11 +14,25 @@
 // ------------------------------------------
 
 function openModal(modalId) {
+    // Close any already-open modal first (prevents stacking)
+    document.querySelectorAll('.modal-overlay.active').forEach(m => {
+        if (m.id !== modalId) m.classList.remove('active');
+    });
+
     document.getElementById(modalId).classList.add('active');
+    // Disable pointer-events on iframes so they don't steal clicks from the modal.
+    // Browser PDF viewers (native plugins) can capture mouse events even when
+    // a higher z-index element is on top.
+    document.querySelectorAll('iframe').forEach(f => f.style.pointerEvents = 'none');
 }
 
 function closeModal(modalId) {
     document.getElementById(modalId).classList.remove('active');
+    // Re-enable iframe pointer-events when no modals are open
+    const anyOpen = document.querySelector('.modal-overlay.active');
+    if (!anyOpen) {
+        document.querySelectorAll('iframe').forEach(f => f.style.pointerEvents = '');
+    }
 }
 
 // ------------------------------------------
@@ -59,7 +73,7 @@ function openSendModal(transitionKey) {
             <div class="form-group">
                 <label class="form-label">To</label>
                 <select class="form-select" id="modal-recipient">
-                    ${config.recipientOptions.map(r => `<option value="${r}">${ROLES[r].name} - ${ROLES[r].title}</option>`).join('')}
+                    ${config.recipientOptions.map(r => `<option value="${r}">${ROLES[r].name} - ${ROLES[r].roleTitle}</option>`).join('')}
                 </select>
             </div>
         `;
@@ -72,7 +86,7 @@ function openSendModal(transitionKey) {
                     <div class="recipient-avatar" style="background:${recipient.color}">${recipient.initials}</div>
                     <div>
                         <div class="recipient-name">${recipient.name}</div>
-                        <div class="recipient-role">${recipient.title}</div>
+                        <div class="recipient-role">${recipient.roleTitle}</div>
                     </div>
                 </div>
             </div>
@@ -149,6 +163,20 @@ function openSendModal(transitionKey) {
                             </div>
                         </div>
                     `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Comments field (if enabled)
+    if (config.showComments && !isReject) {
+        html += `
+            <div class="form-group">
+                <label class="form-label">Comments (optional)</label>
+                <p class="form-helper" style="margin-bottom:8px;margin-top:0">Add any notes or instructions (max 500 words)</p>
+                <textarea class="form-textarea" id="modal-comments" placeholder="Type your comments here..." maxlength="2500"></textarea>
+                <div class="textarea-counter" style="text-align:right;font-size:11px;color:var(--gray-400);margin-top:4px">
+                    <span id="comment-count">0</span> / 2500 characters
                 </div>
             </div>
         `;
@@ -271,6 +299,17 @@ function openSendModal(transitionKey) {
         submitBtn.className = `btn ${isSubmit ? 'btn-success' : 'btn-primary'}`;
     }
 
+    // Add character counter for comments if present
+    setTimeout(() => {
+        const commentsField = document.getElementById('modal-comments');
+        if (commentsField) {
+            commentsField.addEventListener('input', function() {
+                const count = this.value.length;
+                document.getElementById('comment-count').textContent = count;
+            });
+        }
+    }, 0);
+
     openModal('send-modal');
 }
 
@@ -346,6 +385,7 @@ function submitSend() {
     if (!config) return;
 
     const notes = document.getElementById('modal-notes')?.value.trim() || '';
+    const comments = document.getElementById('modal-comments')?.value.trim() || '';
     const isReject = state.currentTransition === 'cs-reject';
 
     // Validation
@@ -379,7 +419,7 @@ function submitSend() {
                 completed: false
             }));
             state.taskAssignment.assignedBy = state.currentRole;
-            state.taskAssignment.assignedAt = 'Just now';
+            state.taskAssignment.assignedAt = new Date().toISOString();
         }
     }
 
@@ -394,7 +434,7 @@ function submitSend() {
             round: round,
             submittedBy: 'ao',
             submittedTo: 'cs',
-            submittedAt: 'Just now',
+            submittedAt: new Date().toISOString(),
             inResponseTo: round === 1 ? 'Initial delegation' : 'Revision request',
             status: 'under-review',
             documents: selectedDrafts.map(d => ({
@@ -421,7 +461,7 @@ function submitSend() {
             type: 'rejected',
             actor: state.currentRole,
             note: notes,
-            timestamp: 'Just now'
+            timestamp: new Date().toISOString()
         });
         if (notes) {
             state.comments.unshift({
@@ -429,10 +469,23 @@ function submitSend() {
                 author: state.currentRole,
                 recipient: 'dto',
                 text: `Rejection reason: ${notes}`,
-                timestamp: 'Just now',
+                timestamp: new Date().toISOString(),
                 linkedDocId: null
             });
         }
+
+        // Notify DTO that case was rejected
+        addNotification({
+            id: 'notif-' + Date.now(),
+            type: 'case_rejected',
+            icon: 'block',
+            iconColor: '#ef4444',
+            title: `Case rejected: ${state.caseInfo.title || 'Untitled'}`,
+            subtitle: `by ${ROLES[state.currentRole].name}`,
+            targetRole: 'dto',
+            timestamp: new Date().toISOString(),
+            read: false
+        });
 
         closeModal('send-modal');
         renderAll();
@@ -440,26 +493,17 @@ function submitSend() {
         return;
     }
 
-    // Handle CS returning work to AO
-    if (state.currentTransition === 'cs-sendback' && recipientId === 'ao') {
-        const latestSubmission = state.submissions
-            .filter(s => s.submittedTo === 'cs' && s.status === 'under-review')
-            .sort((a, b) => b.round - a.round)[0];
-
-        if (latestSubmission) {
-            latestSubmission.status = 'returned';
-        }
-    }
-
     // Determine event type
     let eventType = 'forwarded';
     if (state.currentTransition === 'cs-ao') eventType = 'delegated';
     else if (state.currentTransition === 'ao-cs') eventType = 'submitted';
-    else if (state.currentTransition.includes('sendback')) eventType = 'returned';
 
-    // Update holder
-    state.caseInfo.previousHolder = state.caseInfo.currentHolder;
-    state.caseInfo.currentHolder = recipientId;
+    // Update holder — but NOT for AO submissions.
+    // When AO submits work, case stays with CS. Only task status changes.
+    if (state.currentTransition !== 'ao-cs') {
+        state.caseInfo.previousHolder = state.caseInfo.currentHolder;
+        state.caseInfo.currentHolder = recipientId;
+    }
     state.caseInfo.pendingAction = action;
     state.caseInfo.pendingFrom = state.currentRole;
 
@@ -470,10 +514,53 @@ function submitSend() {
         type: eventType,
         actor: state.currentRole,
         target: recipientId,
+        action: action || null,  // Why it was forwarded (e.g. "review", "approve", "sign")
         note: null,  // Notes removed from modals (use live comments instead)
         docs: attachedDocs,
-        timestamp: 'Just now'
+        timestamp: new Date().toISOString()
     });
+
+    // Add comment if provided
+    if (comments) {
+        state.comments.unshift({
+            id: Date.now() + 1,
+            author: state.currentRole,
+            recipient: recipientId,
+            text: comments,
+            timestamp: new Date().toISOString(),
+            linkedDocId: null
+        });
+    }
+
+    // Notify recipient based on transition type
+    if (state.currentTransition === 'ao-cs') {
+        // AO submitting work → notify CS
+        const aoInfo = getAOInfo(state.currentRole);
+        addNotification({
+            id: 'notif-' + Date.now(),
+            type: 'work_submitted',
+            icon: 'upload_file',
+            iconColor: '#2563eb',
+            title: `Work submitted: ${state.caseInfo.title || 'Untitled'}`,
+            subtitle: `by ${aoInfo ? aoInfo.name : 'Action Officer'}`,
+            targetRole: 'cs',
+            timestamp: new Date().toISOString(),
+            read: false
+        });
+    } else {
+        // Case forwarded/delegated → notify the recipient
+        addNotification({
+            id: 'notif-' + Date.now(),
+            type: 'case_forwarded',
+            icon: 'send',
+            iconColor: '#2563eb',
+            title: `Case received: ${state.caseInfo.title || 'Untitled'}`,
+            subtitle: `from ${ROLES[state.currentRole].name}`,
+            targetRole: recipientId,
+            timestamp: new Date().toISOString(),
+            read: false
+        });
+    }
 
     closeModal('send-modal');
     renderAll();
@@ -485,6 +572,31 @@ function submitSend() {
 // ------------------------------------------
 
 function openCloseModal() {
+    // Render dynamic case info into the modal body
+    const body = document.getElementById('close-modal-body');
+    if (body) {
+        body.innerHTML = `
+            <div class="close-case-summary">
+                <span class="material-icons-outlined close-case-icon">verified</span>
+                <h3 class="close-case-title">Ready to Close</h3>
+                <p class="close-case-desc">This case will be marked as completed and archived.</p>
+            </div>
+            <div class="case-summary">
+                <div class="summary-row">
+                    <span class="summary-label">Case ID</span>
+                    <span class="summary-value">${state.caseInfo.id || '—'}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Title</span>
+                    <span class="summary-value">${state.caseInfo.title || '—'}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Status</span>
+                    <span class="summary-value" style="color:var(--success)">Ready to close</span>
+                </div>
+            </div>
+        `;
+    }
     openModal('close-modal');
 }
 
@@ -494,8 +606,25 @@ function submitClose() {
         id: Date.now(),
         type: 'closed',
         actor: state.currentRole,
-        timestamp: 'Just now'
+        timestamp: new Date().toISOString()
     });
+
+    // Notify all AOs who have tasks on this case
+    const assignedAOs = typeof getAssignedAOs === 'function' ? getAssignedAOs() : [];
+    assignedAOs.forEach((aoId, index) => {
+        addNotification({
+            id: 'notif-' + Date.now() + '-' + index,
+            type: 'case_closed',
+            icon: 'verified',
+            iconColor: '#16a34a',
+            title: `Case closed: ${state.caseInfo.title || 'Untitled'}`,
+            subtitle: `by ${ROLES[state.currentRole].name}`,
+            targetRole: aoId,
+            timestamp: new Date().toISOString(),
+            read: false
+        });
+    });
+
     closeModal('close-modal');
     renderAll();
     showToast('Case closed!', 'success');
@@ -505,34 +634,93 @@ function submitClose() {
 // UPLOAD MODAL
 // ------------------------------------------
 
-function simulateFileSelect() {
-    const types = ['pdf', 'excel', 'word'];
-    const type = types[Math.floor(Math.random() * types.length)];
-    const ext = { pdf: '.pdf', excel: '.xlsx', word: '.docx' }[type];
-    document.getElementById('upload-name').value = `Document_${Date.now().toString().slice(-6)}${ext}`;
+// ------------------------------------------
+// UPLOAD MODAL (Real file uploads)
+// ------------------------------------------
+
+// Temporary storage for files selected in the upload modal
+let uploadModalFile = null;
+
+function openUploadModal() {
+    uploadModalFile = null;
+    document.getElementById('upload-name').value = '';
+
+    // Replace the simulated upload area with a real file input trigger
+    const uploadArea = document.querySelector('#upload-modal .upload-area');
+    if (uploadArea) {
+        // Create/find real file input
+        let fileInput = document.getElementById('upload-file-input');
+        if (!fileInput) {
+            fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.id = 'upload-file-input';
+            fileInput.accept = '.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg';
+            fileInput.style.display = 'none';
+            fileInput.onchange = function() {
+                if (this.files.length > 0) {
+                    uploadModalFile = this.files[0];
+                    document.getElementById('upload-name').value = this.files[0].name;
+                    uploadArea.innerHTML = `
+                        <span class="material-icons-outlined upload-icon" style="color:var(--success)">check_circle</span>
+                        <p class="upload-text">${this.files[0].name}</p>
+                        <p class="upload-hint">${(this.files[0].size / 1024).toFixed(0)} KB</p>
+                    `;
+                }
+            };
+            document.body.appendChild(fileInput);
+        }
+        uploadArea.onclick = () => fileInput.click();
+    }
+
+    openModal('upload-modal');
 }
 
-function submitUpload() {
+// Legacy function name kept for backward compatibility
+function simulateFileSelect() {
+    const fileInput = document.getElementById('upload-file-input');
+    if (fileInput) {
+        fileInput.click();
+    } else {
+        openUploadModal();
+    }
+}
+
+async function submitUpload() {
     const name = document.getElementById('upload-name').value.trim();
     if (!name) {
         showToast('Enter document name', 'error');
         return;
     }
 
-    const type = name.endsWith('.xlsx') ? 'excel' : name.endsWith('.docx') ? 'word' : 'pdf';
-    const docContent = generateUploadedDocContent(name, type);
+    let docId, newDraft;
 
-    const docId = 'draft_' + Date.now();
-    const newDraft = {
-        id: docId,
-        name,
-        type,
-        size: '1.2 MB',
-        uploadedBy: state.currentRole,
-        uploadedAt: 'Just now',
-        status: 'draft',
-        content: docContent
-    };
+    if (uploadModalFile && typeof caseManager !== 'undefined') {
+        // Real file upload path
+        const { fileId, docRecord } = await caseManager.attachFile(uploadModalFile, state.currentRole);
+        docRecord.id = 'draft_' + Date.now();
+        docRecord.status = 'draft';
+        docRecord.name = name; // Use the custom name from the input
+        newDraft = docRecord;
+        docId = docRecord.id;
+    } else {
+        // Fallback: create a record without a real file
+        docId = 'draft_' + Date.now();
+        const ext = name.split('.').pop().toLowerCase();
+        let type = 'pdf';
+        if (['xls', 'xlsx', 'csv'].includes(ext)) type = 'excel';
+        else if (['doc', 'docx'].includes(ext)) type = 'word';
+
+        newDraft = {
+            id: docId,
+            name,
+            type,
+            size: '—',
+            uploadedBy: state.currentRole,
+            uploadedAt: new Date().toISOString(),
+            status: 'draft',
+            content: null
+        };
+    }
 
     state.drafts.push(newDraft);
 
@@ -542,10 +730,11 @@ function submitUpload() {
         actor: state.currentRole,
         note: name,
         docId: docId,
-        timestamp: 'Just now'
+        timestamp: new Date().toISOString()
     });
 
     state.sectionStates.documents = true;
+    uploadModalFile = null;
 
     closeModal('upload-modal');
     document.getElementById('upload-name').value = '';
@@ -553,63 +742,287 @@ function submitUpload() {
     showToast('Document uploaded as draft', 'success');
 }
 
-function generateUploadedDocContent(name, type) {
-    const uploader = ROLES[state.currentRole];
-    const cleanName = name.replace(/\.[^/.]+$/, '').replace(/_/g, ' ');
+// ------------------------------------------
+// REGISTER CASE MODAL (DTO creates new case)
+// ------------------------------------------
 
-    if (type === 'excel') {
+// Holds the files selected in the register modal
+let registerFiles = [];
+
+function openRegisterCaseModal() {
+    // Reset the form
+    registerFiles = [];
+    const titleInput = document.getElementById('register-case-title');
+    const prioritySelect = document.getElementById('register-case-priority');
+    const dueDateInput = document.getElementById('register-case-due-date');
+    const notesInput = document.getElementById('register-case-notes');
+    const fileList = document.getElementById('register-file-list');
+    const uploadArea = document.getElementById('register-upload-area');
+    const fileInput = document.getElementById('register-file-input');
+
+    if (titleInput) titleInput.value = '';
+    if (prioritySelect) prioritySelect.value = 'medium';
+    if (dueDateInput) dueDateInput.value = '';
+    if (notesInput) notesInput.value = '';
+    if (fileList) fileList.innerHTML = '';
+    if (fileInput) fileInput.value = '';
+    if (uploadArea) {
+        // Reset the label content (the for="register-file-input" stays on the element)
+        uploadArea.innerHTML = `
+            <span class="material-icons-outlined upload-icon">cloud_upload</span>
+            <p class="upload-text">Click to select files</p>
+            <p class="upload-hint">PDF, Word, Excel, or image files</p>
+        `;
+    }
+
+    openModal('register-case-modal');
+    console.log('Register case modal opened');
+}
+
+function handleRegisterFileSelect(input) {
+    console.log('handleRegisterFileSelect called, files:', input.files.length);
+    if (!input.files.length) return;
+
+    // Add new files to the list (don't replace)
+    for (const file of input.files) {
+        registerFiles.push(file);
+        console.log('Added file:', file.name, file.size, 'bytes');
+    }
+
+    // Update the upload area to show success
+    const uploadArea = document.getElementById('register-upload-area');
+    if (uploadArea) {
+        uploadArea.innerHTML = `
+            <span class="material-icons-outlined upload-icon" style="color:var(--success)">check_circle</span>
+            <p class="upload-text">${registerFiles.length} file(s) selected</p>
+            <p class="upload-hint">Click to add more</p>
+        `;
+    }
+
+    // Render the file list
+    renderRegisterFileList();
+}
+
+function renderRegisterFileList() {
+    const container = document.getElementById('register-file-list');
+    if (!container) return;
+
+    container.innerHTML = registerFiles.map((file, i) => {
+        const sizeStr = file.size > 1024 * 1024
+            ? (file.size / (1024 * 1024)).toFixed(1) + ' MB'
+            : (file.size / 1024).toFixed(0) + ' KB';
+
+        const ext = file.name.split('.').pop().toLowerCase();
+        let icon = 'description'; // default
+        if (ext === 'pdf') icon = 'picture_as_pdf';
+        else if (['xls', 'xlsx', 'csv'].includes(ext)) icon = 'table_chart';
+        else if (['png', 'jpg', 'jpeg', 'gif'].includes(ext)) icon = 'image';
+
         return `
-            <h1>${cleanName}</h1>
-            <p class="subtitle">Spreadsheet Document<br>Uploaded by ${uploader.name}</p>
-
-            <h2>Data Summary</h2>
-            <table>
-                <thead><tr><th>Category</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Total</th></tr></thead>
-                <tbody>
-                    <tr><td>Revenue</td><td>125,000</td><td>142,000</td><td>138,500</td><td>156,200</td><td>561,700</td></tr>
-                    <tr><td>Expenses</td><td>98,000</td><td>105,000</td><td>112,000</td><td>118,000</td><td>433,000</td></tr>
-                    <tr><td>Net</td><td>27,000</td><td>37,000</td><td>26,500</td><td>38,200</td><td>128,700</td></tr>
-                </tbody>
-            </table>
-
-            <h2>Analysis Notes</h2>
-            <ul>
-                <li>Q4 shows strongest performance with 15% growth</li>
-                <li>Expense ratio maintained at target of 77%</li>
-                <li>Year-over-year improvement of 8.5%</li>
-            </ul>
-
-            <div style="margin-top:40px;padding:20px;background:#f0fdf4;border-radius:8px">
-                <p style="color:#16a34a;font-weight:600">✓ Data verified and ready for review</p>
+            <div class="file-list-item">
+                <span class="material-icons-outlined" style="font-size:18px;color:var(--gray-500)">${icon}</span>
+                <span class="file-name">${file.name}</span>
+                <span class="file-size">${sizeStr}</span>
+                <button class="file-remove" onclick="removeRegisterFile(${i})" title="Remove">
+                    <span class="material-icons-outlined" style="font-size:16px">close</span>
+                </button>
             </div>
         `;
-    } else if (type === 'word') {
-        return `
-            <h1>${cleanName}</h1>
-            <p class="subtitle">Word Document<br>Uploaded by ${uploader.name}</p>
+    }).join('');
+}
 
-            <h2>Overview</h2>
-            <p>This document contains the prepared response and analysis as requested.</p>
+function removeRegisterFile(index) {
+    registerFiles.splice(index, 1);
+    renderRegisterFileList();
 
-            <h2>Summary</h2>
-            <p>All requested items have been addressed and documented. Please review the attached materials for completeness.</p>
-
-            <div style="margin-top:40px;padding:20px;background:#eff6ff;border-radius:8px">
-                <p style="color:#2563eb;font-weight:600">Ready for submission</p>
-            </div>
+    // Update upload area text
+    const uploadArea = document.getElementById('register-upload-area');
+    if (uploadArea && registerFiles.length === 0) {
+        uploadArea.innerHTML = `
+            <span class="material-icons-outlined upload-icon">cloud_upload</span>
+            <p class="upload-text">Click to select files</p>
+            <p class="upload-hint">PDF, Word, Excel, or image files</p>
         `;
-    } else {
-        return `
-            <h1>${cleanName}</h1>
-            <p class="subtitle">PDF Document<br>Uploaded by ${uploader.name}</p>
-
-            <h2>Document Contents</h2>
-            <p>This PDF document has been uploaded and is ready for review.</p>
-
-            <div style="margin-top:40px;padding:20px;background:#fef2f2;border-radius:8px;text-align:center">
-                <p style="color:#dc2626;font-weight:600">📄 PDF Document</p>
-            </div>
+    } else if (uploadArea) {
+        uploadArea.innerHTML = `
+            <span class="material-icons-outlined upload-icon" style="color:var(--success)">check_circle</span>
+            <p class="upload-text">${registerFiles.length} file(s) selected</p>
+            <p class="upload-hint">Click to add more</p>
         `;
+    }
+}
+
+async function submitRegisterCase() {
+    const title = document.getElementById('register-case-title').value.trim();
+    const priority = document.getElementById('register-case-priority').value;
+    const dueDate = document.getElementById('register-case-due-date').value;
+    const notes = document.getElementById('register-case-notes').value.trim();
+
+    // Validation
+    if (!title) {
+        showToast('Please enter a case title', 'error');
+        return;
+    }
+
+    // Disable submit button to prevent double-click
+    const submitBtn = document.getElementById('register-case-submit');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="material-icons-outlined" style="font-size:18px">hourglass_top</span> Registering...';
+    }
+
+    try {
+        const caseId = await caseManager.createCase({
+            title,
+            priority,
+            dueDate,
+            notes,
+            files: registerFiles
+        });
+
+        registerFiles = [];
+        closeModal('register-case-modal');
+        showToast(`Case ${caseId} registered!`, 'success');
+    } catch (err) {
+        console.error('Failed to register case:', err);
+        showToast('Failed to register case', 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span class="material-icons-outlined" style="font-size:18px">add_circle</span> Register Case';
+        }
+    }
+}
+
+// ------------------------------------------
+// APPROVAL MODAL
+// ------------------------------------------
+
+function handleApprove() {
+    openModal('approval-modal');
+    document.getElementById('approval-action-type').textContent = 'approve';
+    document.getElementById('approval-modal-title').textContent = 'Approve Document';
+    document.getElementById('approval-action-label').textContent = 'approve';
+    document.getElementById('approval-reason-field').style.display = 'none';
+
+    const submitBtn = document.getElementById('approval-submit-btn');
+    submitBtn.innerHTML = '<span class="material-icons-outlined">check_circle</span>Approve';
+    submitBtn.className = 'btn btn-success';
+}
+
+function handleReject() {
+    openModal('approval-modal');
+    document.getElementById('approval-action-type').textContent = 'reject';
+    document.getElementById('approval-modal-title').textContent = 'Reject Document';
+    document.getElementById('approval-action-label').textContent = 'reject';
+    document.getElementById('approval-reason-field').style.display = 'block';
+
+    const submitBtn = document.getElementById('approval-submit-btn');
+    submitBtn.innerHTML = '<span class="material-icons-outlined">cancel</span>Reject';
+    submitBtn.className = 'btn btn-danger';
+}
+
+function submitApproval() {
+    const actionType = document.getElementById('approval-action-type').textContent;
+    const isApproved = actionType === 'approve';
+    const reason = document.getElementById('approval-rejection-reason')?.value.trim() || '';
+
+    // Validation for rejection
+    if (!isApproved && !reason) {
+        showToast('Please provide a reason for rejection', 'error');
+        return;
+    }
+
+    // Log approval/rejection event
+    state.events.unshift({
+        id: Date.now(),
+        type: isApproved ? 'approved' : 'approval_rejected',
+        actor: state.currentRole,
+        note: isApproved ? null : reason,
+        timestamp: new Date().toISOString()
+    });
+
+    // Add comment for rejection reason
+    if (!isApproved && reason) {
+        state.comments.unshift({
+            id: Date.now() + 1,
+            author: state.currentRole,
+            recipient: state.caseInfo.pendingFrom,
+            text: `Rejection reason: ${reason}`,
+            timestamp: new Date().toISOString(),
+            linkedDocId: null
+        });
+    }
+
+    // Notify the person who requested the action (e.g. EA who sent doc for approval)
+    if (state.caseInfo.pendingFrom) {
+        addNotification({
+            id: 'notif-' + Date.now(),
+            type: isApproved ? 'doc_approved' : 'doc_rejected',
+            icon: isApproved ? 'check_circle' : 'cancel',
+            iconColor: isApproved ? '#16a34a' : '#ef4444',
+            title: isApproved
+                ? `Document approved: ${state.caseInfo.title || 'Untitled'}`
+                : `Document rejected: ${state.caseInfo.title || 'Untitled'}`,
+            subtitle: `by ${ROLES[state.currentRole].name}`,
+            targetRole: state.caseInfo.pendingFrom,
+            timestamp: new Date().toISOString(),
+            read: false
+        });
+    }
+
+    // Clear pending action
+    state.caseInfo.pendingAction = null;
+
+    // Close modal and re-render
+    closeModal('approval-modal');
+    document.getElementById('approval-rejection-reason').value = '';
+    renderAll();
+
+    showToast(isApproved ? 'Document approved' : 'Document rejected', 'success');
+
+    // Show next action prompt after a brief moment
+    setTimeout(() => {
+        showNextActionPrompt(isApproved);
+    }, 800);
+}
+
+function showNextActionPrompt(wasApproved) {
+    const message = wasApproved
+        ? 'Document approved. What would you like to do next?'
+        : 'Document rejected. Would you like to return it to the sender?';
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-next-action';
+    toast.innerHTML = `
+        <div class="toast-content">
+            <span class="material-icons-outlined">${wasApproved ? 'check_circle' : 'cancel'}</span>
+            <span>${message}</span>
+        </div>
+        <button class="toast-action-btn" onclick="openActionMenu()">
+            <span>Take Action</span>
+            <span class="material-icons-outlined">arrow_forward</span>
+        </button>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.remove();
+        }
+    }, 10000);
+}
+
+function openActionMenu() {
+    // Close any action toasts
+    document.querySelectorAll('.toast-next-action').forEach(t => t.remove());
+
+    // Open the actions dropdown
+    const actionsBtn = document.getElementById('actions-dropdown-btn');
+    if (actionsBtn) {
+        actionsBtn.click();
     }
 }
 
@@ -626,4 +1039,13 @@ window.submitSend = submitSend;
 window.openCloseModal = openCloseModal;
 window.submitClose = submitClose;
 window.simulateFileSelect = simulateFileSelect;
+window.openUploadModal = openUploadModal;
 window.submitUpload = submitUpload;
+window.openRegisterCaseModal = openRegisterCaseModal;
+window.handleRegisterFileSelect = handleRegisterFileSelect;
+window.removeRegisterFile = removeRegisterFile;
+window.submitRegisterCase = submitRegisterCase;
+window.handleApprove = handleApprove;
+window.handleReject = handleReject;
+window.submitApproval = submitApproval;
+window.openActionMenu = openActionMenu;

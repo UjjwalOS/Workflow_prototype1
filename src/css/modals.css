@@ -84,6 +84,20 @@
     overflow-y: auto;
 }
 
+/* Modals with dropdown menus: allow dropdowns to overflow the modal body.
+   These modals are short enough that they don't need internal scrolling. */
+#delegate-modal-body,
+#edit-task-modal-body {
+    overflow: visible;
+}
+
+/* The parent .modal also needs overflow:visible so the dropdown
+   isn't clipped by max-height on the flex container. */
+#delegate-modal > .modal,
+#edit-task-modal > .modal {
+    overflow: visible;
+}
+
 .modal-footer {
     display: flex;
     justify-content: flex-end;
@@ -298,8 +312,53 @@
     color: var(--danger);
 }
 
+/* Cancel Task Warnings */
+.cancel-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.cancel-warning .material-icons-outlined {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.cancel-warning p {
+    margin: 0;
+}
+
+/* Submitted = strong warning (amber) — AO already did the work */
+.cancel-warning--submitted {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+}
+
+.cancel-warning--submitted .material-icons-outlined {
+    color: #f59e0b;
+}
+
+/* In Progress = soft info (blue) — AO is working but hasn't submitted */
+.cancel-warning--progress {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+}
+
+.cancel-warning--progress .material-icons-outlined {
+    color: #3b82f6;
+}
+
 /* Upload Modal */
 .upload-area {
+    display: block;
     border: 2px dashed var(--gray-300);
     border-radius: var(--radius-lg);
     padding: 32px;

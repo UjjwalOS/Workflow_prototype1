@@ -15,31 +15,92 @@
 // ------------------------------------------
 
 function renderEventLog() {
-    const container = document.getElementById('event-log-tab');
+    const container = document.getElementById('activity-tab');
+    if (!state.caseInfo.id) { container.innerHTML = ''; return; }
 
+    // -- Event type configuration --
     const verbConfig = {
         created: { verb: 'registered', suffix: 'this case', dotState: 'completed' },
         forwarded: { verb: 'forwarded', suffix: '', dotState: 'completed' },
         delegated: { verb: 'delegated', suffix: '', dotState: 'milestone' },
-        submitted: { verb: 'completed & forwarded', suffix: '', dotState: 'completed' },
-        returned: { verb: 'sent back', suffix: '', dotState: 'sent-back' },
+        submitted: { verb: 'submitted', suffix: 'a task for review', dotState: 'completed' },
+        returned: { verb: 'requested revision on', suffix: '', dotState: 'sent-back' },
         comment: { verb: 'added a note', suffix: '', dotState: 'completed' },
         uploaded: { verb: 'uploaded', suffix: 'a document', dotState: 'completed' },
         completed: { verb: 'completed', suffix: 'a task', dotState: 'completed' },
-        closed: { verb: 'approved', suffix: '', dotState: 'approved' },
+        closed: { verb: 'closed', suffix: 'this case', dotState: 'approved' },
         rejected: { verb: 'rejected', suffix: 'this case', dotState: 'rejected' },
+        approved: { verb: 'approved', suffix: 'the document', dotState: 'approved' },
+        approval_rejected: { verb: 'rejected', suffix: 'the document', dotState: 'rejected' },
         priority_changed: { verb: 'changed priority', suffix: '', dotState: 'completed' },
         due_date_changed: { verb: 'changed due date', suffix: '', dotState: 'completed' },
-        viewed: { verb: 'viewed', suffix: 'this case', dotState: 'completed' }
+        viewed: { verb: 'viewed', suffix: 'this case', dotState: 'completed' },
+        task_cancelled: { verb: 'cancelled task', suffix: '', dotState: 'rejected' },
+        task_reassigned: { verb: 'reassigned task', suffix: '', dotState: 'completed' },
+        task_reopened: { verb: 'reopened task', suffix: '', dotState: 'completed' },
+        task_approved: { verb: 'approved', suffix: 'a task', dotState: 'approved' }
     };
 
-    let events = [...state.events];
-    let hiddenCount = 0;
+    // -- Change 1: System vs Decision classification --
+    const SYSTEM_EVENTS = ['viewed', 'priority_changed', 'due_date_changed'];
 
-    if (events.length > 5 && !state.eventsExpanded) {
-        const visible = [events[0], events[1], ...events.slice(-2)];
-        hiddenCount = events.length - 4;
-        events = visible;
+    // Colored pill badges for decision events
+    const VERB_BADGE_COLORS = {
+        approved:          { bg: '#f0fdf4', color: '#16a34a', label: 'Approved' },
+        task_approved:     { bg: '#f0fdf4', color: '#16a34a', label: 'Approved' },
+        forwarded:         { bg: '#eff6ff', color: '#2563eb', label: 'Forwarded' },
+        delegated:         { bg: '#f5f3ff', color: '#7c3aed', label: 'Delegated' },
+        returned:          { bg: '#fffbeb', color: '#d97706', label: 'Revision Requested' },
+        rejected:          { bg: '#fef2f2', color: '#dc2626', label: 'Rejected' },
+        approval_rejected: { bg: '#fef2f2', color: '#dc2626', label: 'Rejected' },
+        closed:            { bg: '#f0fdf4', color: '#16a34a', label: 'Closed' },
+        submitted:         { bg: '#eff6ff', color: '#2563eb', label: 'Submitted' },
+        task_cancelled:    { bg: '#fef2f2', color: '#ef4444', label: 'Cancelled' },
+        task_reassigned:   { bg: '#fffbeb', color: '#d97706', label: 'Reassigned' },
+        task_reopened:     { bg: '#eff6ff', color: '#2563eb', label: 'Reopened' },
+    };
+
+    function isSystemEvent(type) {
+        return SYSTEM_EVENTS.includes(type);
+    }
+
+    // -- Change 6: Smarter collapse logic --
+    // Always show decision events, only hide system events when collapsed
+    let events = [...state.events];
+
+    // Filter out system events (viewed, priority changes, etc.) when in "decisions only" mode
+    if (state.eventsFilterMode === 'decisions') {
+        events = events.filter(e => !isSystemEvent(e.type));
+    }
+
+    let hiddenSystemEvents = [];
+
+    if (events.length > 7 && !state.eventsExpanded) {
+        const decisionEvents = events.filter(e => !isSystemEvent(e.type));
+        const systemEvents = events.filter(e => isSystemEvent(e.type));
+
+        if (systemEvents.length > 0) {
+            hiddenSystemEvents = systemEvents;
+            events = decisionEvents;
+        } else {
+            // All decisions, no system events — use original collapse
+            const visible = [events[0], events[1], ...events.slice(-2)];
+            hiddenSystemEvents = events.slice(2, -2).map(e => e); // store for count
+            events = visible;
+        }
+    }
+
+    // Build "show more" summary text
+    let showMoreHtml = '';
+    if (hiddenSystemEvents.length > 0) {
+        const typeCounts = {};
+        hiddenSystemEvents.forEach(e => {
+            const label = e.type === 'viewed' ? 'view' : e.type.replace(/_/g, ' ');
+            typeCounts[label] = (typeCounts[label] || 0) + 1;
+        });
+        const parts = Object.entries(typeCounts).map(([type, count]) => `${count} ${type}${count > 1 ? 's' : ''}`);
+        const summaryText = `${hiddenSystemEvents.length} more: ${parts.join(', ')}`;
+        showMoreHtml = `<div class="show-more-events" onclick="expandEvents()"><span class="material-icons-outlined" style="font-size:18px">unfold_more</span>${summaryText}</div>`;
     }
 
     const fullEvents = [...state.events];
@@ -50,19 +111,49 @@ function renderEventLog() {
 
     let html = events.map((event, idx) => {
         const config = verbConfig[event.type] || { verb: 'performed action', suffix: '', dotState: 'completed' };
-        const actor = ROLES[event.actor];
-        const target = event.target ? ROLES[event.target] : null;
+        const actor = getAOInfo(event.actor) || ROLES[event.actor];
+        const target = event.target ? (getAOInfo(event.target) || ROLES[event.target]) : null;
+        const isSystem = isSystemEvent(event.type);
 
         const isActorYou = event.actor === state.currentRole;
-        const isTargetYou = event.target === state.currentRole;
+        const isTargetYou = event.target === state.currentRole ||
+            (event.targets && event.targets.includes(state.currentRole));
         const involvesYou = isActorYou || isTargetYou;
 
-        const actorHtml = `<span class="event-actor ${isActorYou ? 'is-you' : ''}">${isActorYou ? 'You' : actor.name}</span>`;
-        const verbHtml = `<span class="event-verb">${config.verb}</span>`;
-        const suffixHtml = config.suffix ? `<span class="event-suffix"> ${config.suffix}</span>` : '';
-        const targetHtml = target ? ` to <span class="event-target ${isTargetYou ? 'is-you' : ''}">${isTargetYou ? 'you' : target.name}</span>` : '';
+        // -- Change 3: Role avatar --
+        const actorColor = actor.color || '#9ca3af';
+        const actorInitials = actor.initials || actor.name?.charAt(0) || '?';
+        const avatarHtml = `<span class="event-avatar" style="background:${actorColor}">${actorInitials}</span>`;
 
-        const actionLine = `${actorHtml} ${verbHtml}${targetHtml}${suffixHtml}`;
+        const actorHtml = `${avatarHtml}<span class="event-actor ${isActorYou ? 'is-you' : ''}">${isActorYou ? 'You' : actor.name}</span>`;
+
+        // -- Change 1: Verb badge for decisions, plain text for system --
+        const badgeConfig = VERB_BADGE_COLORS[event.type];
+        const verbHtml = (badgeConfig && !isSystem)
+            ? `<span class="event-verb-badge" style="background:${badgeConfig.bg};color:${badgeConfig.color}">${badgeConfig.label}</span>`
+            : `<span class="event-verb">${config.verb}</span>`;
+
+        // Dynamic suffix: for forwarded events, show the reason (e.g. "for review")
+        const ACTION_LABELS = { review: 'for review', approve: 'for approval', sign: 'for signature', triage: 'for triage', 'urgent-review': 'for urgent review' };
+        const dynamicSuffix = (event.type === 'forwarded' && event.action) ? ACTION_LABELS[event.action] || '' : config.suffix;
+        const suffixHtml = dynamicSuffix ? `<span class="event-suffix"> ${dynamicSuffix}</span>` : '';
+        // Handle multiple targets (e.g. delegation to multiple AOs)
+        let targetHtml = '';
+        if (event.targets && event.targets.length > 0) {
+            const names = event.targets.map(id => {
+                const info = getAOInfo(id) || ROLES[id];
+                const isYou = id === state.currentRole;
+                return `<span class="event-target ${isYou ? 'is-you' : ''}">${isYou ? 'you' : (info ? info.name : 'AO')}</span>`;
+            });
+            targetHtml = ` to ${names.join(', ')}`;
+        } else if (target) {
+            targetHtml = ` to <span class="event-target ${isTargetYou ? 'is-you' : ''}">${isTargetYou ? 'you' : target.name}</span>`;
+        }
+
+        // -- Change 2: Inline timestamp for system events --
+        const inlineTime = isSystem ? ` <span class="event-time-inline">&middot; ${formatRelativeTime(event.timestamp)}</span>` : '';
+
+        const actionLine = `${actorHtml} ${verbHtml}${targetHtml}${suffixHtml}${inlineTime}`;
 
         let dotState = config.dotState;
         if (idx === 0 && state.caseInfo.status === 'active') {
@@ -71,14 +162,16 @@ function renderEventLog() {
 
         const isHighlighted = idx === 0 && state.highlightLatestEvent && ['forwarded', 'delegated', 'submitted', 'returned'].includes(event.type);
 
+        // -- Change 4: Duration badge showing who acted and how fast --
         const duration = durations[event.id];
         let durationHtml = '';
         if (duration && event.type !== 'created' && event.type !== 'viewed' && event.type !== 'comment') {
             const durationClass = duration.minutes < 60 ? 'fast' : (duration.minutes < 240 ? 'normal' : 'slow');
+            const actorLabel = isActorYou ? 'You' : (actor.name || 'Unknown');
             durationHtml = `
                 <div class="event-duration ${durationClass}">
                     <span class="material-icons-outlined">schedule</span>
-                    ${duration.display}
+                    ${actorLabel} acted in ${duration.display}
                 </div>
             `;
         }
@@ -90,6 +183,7 @@ function renderEventLog() {
             statusBadge = '<span class="event-status-badge rejected">Rejected</span>';
         }
 
+        // -- Change 7: Comment events get speech-bubble card --
         let contentHtml = '';
         if (event.note && event.type !== 'created') {
             if (event.type === 'delegated') {
@@ -118,6 +212,10 @@ function renderEventLog() {
                         </div>
                     </div>
                 `;
+            } else if (event.type === 'comment') {
+                // Speech-bubble style card with role-colored left border
+                const authorColor = actorColor;
+                contentHtml = `<div class="event-comment-card" style="border-left-color:${authorColor}" onclick="goToComments()" title="View in Comments section">${event.note}</div>`;
             } else {
                 contentHtml = `<div class="event-note" onclick="goToComments()" title="View in Comments section">${event.note}</div>`;
             }
@@ -147,16 +245,28 @@ function renderEventLog() {
             }).join('');
         }
 
-        let showMore = '';
-        if (idx === 1 && hiddenCount > 0) {
-            showMore = `<div class="show-more-events" onclick="expandEvents()"><span class="material-icons-outlined" style="font-size:18px">unfold_more</span>Show ${hiddenCount} more activities</div>`;
+        // -- Change 2: Right-aligned timestamp only for decision events --
+        let timestampHtml;
+        if (statusBadge) {
+            timestampHtml = statusBadge;
+        } else if (isSystem) {
+            timestampHtml = ''; // timestamp is inline in the action line
+        } else {
+            timestampHtml = `<span class="event-time">${formatRelativeTime(event.timestamp)}</span>`;
         }
 
-        const timestampHtml = statusBadge || `<span class="event-time">${event.timestamp}</span>`;
+        // -- Change 5: "CURRENT" badge on the latest event --
+        const currentBadge = (idx === 0 && state.caseInfo.status === 'active')
+            ? '<div class="event-current-badge">Current</div>'
+            : '';
+
+        // -- Change 6: Insert "show more" before the last event --
+        const insertShowMore = (idx === events.length - 1 && showMoreHtml) ? showMoreHtml : '';
 
         return `
-            ${showMore}
-            <div class="event-item ${isHighlighted ? 'highlighted' : ''}">
+            ${insertShowMore}
+            ${currentBadge}
+            <div class="event-item ${isSystem ? 'system-event' : ''} ${isHighlighted ? 'highlighted' : ''}">
                 <div class="event-dot ${dotState} ${involvesYou ? 'involves-you' : ''}"></div>
                 <div class="event-content">
                     <div class="event-header">
@@ -171,7 +281,18 @@ function renderEventLog() {
         `;
     }).join('');
 
-    container.innerHTML = `<div class="event-log">${html}</div>`;
+    // Filter toggle button — shows when there are system events to hide/show
+    const isFiltered = state.eventsFilterMode === 'decisions';
+    const systemCount = state.events.filter(e => isSystemEvent(e.type)).length;
+    const toggleHtml = systemCount > 0 ? `
+        <div class="event-filter-bar">
+            <button class="event-filter-toggle ${isFiltered ? 'active' : ''}" onclick="toggleEventFilter()">
+                <span class="material-icons-outlined" style="font-size:16px">${isFiltered ? 'filter_list' : 'filter_list_off'}</span>
+                ${isFiltered ? `Decisions only &middot; ${systemCount} hidden` : 'Showing all'}
+            </button>
+        </div>` : '';
+
+    container.innerHTML = `${toggleHtml}<div class="event-log">${html}</div>`;
 }
 
 function getSimulatedDuration(eventType, index) {
@@ -210,7 +331,20 @@ function getSimulatedDuration(eventType, index) {
 // ------------------------------------------
 
 function renderDocumentsTab() {
-    const container = document.getElementById('documents-tab');
+    const container = document.getElementById('document-tab');
+
+    // No case loaded — show a helpful empty state
+    if (!state.caseInfo.id) {
+        container.innerHTML = `
+            <div class="doc-empty-state">
+                <span class="material-icons-outlined">description</span>
+                <p class="doc-empty-state-text">No case selected</p>
+                <p class="doc-empty-state-hint">Select or register a case to view documents.</p>
+            </div>
+        `;
+        return;
+    }
+
     const role = state.currentRole;
     const docTypeIcons = { pdf: 'picture_as_pdf', excel: 'table_chart', word: 'description' };
 
@@ -228,6 +362,17 @@ function renderDocumentsTab() {
         html = renderDocumentsForEA(originalDoc, submissions, drafts, docTypeIcons);
     } else {
         html = renderDocumentsForDTO(originalDoc, submissions, drafts, docTypeIcons);
+    }
+
+    // Fallback: if the role function returned empty, show generic empty state
+    if (!html || html.trim() === '') {
+        html = `
+            <div class="doc-empty-state">
+                <span class="material-icons-outlined">description</span>
+                <p class="doc-empty-state-text">No documents yet</p>
+                <p class="doc-empty-state-hint">Documents will appear here as the case progresses.</p>
+            </div>
+        `;
     }
 
     container.innerHTML = html;
@@ -402,9 +547,128 @@ function renderActionBar() {
     container.innerHTML = html;
 }
 
+// ------------------------------------------
+// COMMENTS TAB
+// ------------------------------------------
+
+function renderCommentsTab() {
+    const container = document.getElementById('comments-tab');
+    if (!container) return;
+    if (!state.caseInfo.id) { container.innerHTML = ''; return; }
+
+    // Comment input state
+    const { recipient, text, dropdownOpen, highlightedIndex, linkedDocId } = state.commentInput;
+    const recipientRole = recipient ? (getAOInfo(recipient) || ROLES[recipient]) : null;
+    const recipients = Object.keys(ROLES).filter(id => id !== state.currentRole);
+    const linkedDoc = linkedDocId ? findDocument(linkedDocId) : null;
+    const canSend = recipient && text.trim().length > 0;
+
+    // Comment composer
+    const composerHtml = `
+        <div class="comment-input-area">
+            ${linkedDoc ? `
+                <div class="comment-linked-indicator">
+                    <span class="material-icons-outlined" style="font-size:14px">attach_file</span>
+                    Re: ${linkedDoc.name}
+                    <button onclick="clearLinkedDoc()" title="Remove">
+                        <span class="material-icons-outlined" style="font-size:14px">close</span>
+                    </button>
+                </div>
+            ` : ''}
+            <div class="comment-to-row">
+                <label class="comment-to-label">To:</label>
+                <div class="comment-recipient-dropdown">
+                    <button class="comment-recipient-btn" onclick="toggleRecipientDropdown()">
+                        ${recipientRole ? `
+                            <div class="recipient-btn-avatar" style="background:${recipientRole.color}">${recipientRole.initials}</div>
+                            <span class="recipient-btn-name">${recipientRole.name}</span>
+                        ` : `
+                            <span class="recipient-btn-placeholder">Select recipient</span>
+                        `}
+                        <span class="material-icons-outlined recipient-btn-arrow">expand_more</span>
+                    </button>
+                    ${dropdownOpen ? `
+                        <div class="recipient-dropdown-menu">
+                            ${recipients.map((roleId, i) => {
+                                const role = ROLES[roleId];
+                                return `
+                                    <div class="recipient-dropdown-option ${i === highlightedIndex ? 'highlighted' : ''}"
+                                         onclick="selectCommentRecipient('${roleId}')"
+                                         onmouseenter="highlightMentionOption(${i})">
+                                        <div class="recipient-option-avatar" style="background:${role.color}">${role.initials}</div>
+                                        <div class="recipient-option-info">
+                                            <div class="recipient-option-name">${role.name}</div>
+                                            <div class="recipient-option-title">${role.roleTitle}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+            <textarea
+                id="comment-textarea"
+                class="comment-textarea"
+                placeholder="Write your comment..."
+                oninput="handleCommentInput(event)"
+                onkeydown="handleCommentKeydown(event)"
+            >${text}</textarea>
+            <div class="comment-input-footer">
+                <div></div>
+                <button class="comment-send-btn ${canSend ? 'enabled' : ''}" onclick="submitComment()">
+                    Send
+                    <span class="material-icons-outlined" style="font-size:16px">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+    `;
+
+    // All comments (no limit)
+    const commentsHtml = state.comments.length === 0
+        ? '<div class="empty-state" style="text-align:center;padding:40px 20px;color:var(--gray-400)">No messages yet. Start a conversation!</div>'
+        : state.comments.map(c => {
+            const author = getAOInfo(c.author) || ROLES[c.author];
+            const commentRecipient = c.recipient ? (getAOInfo(c.recipient) || ROLES[c.recipient]) : null;
+            const commentLinkedDoc = c.linkedDocId ? findDocument(c.linkedDocId) : null;
+            return `
+                <div class="comment-item">
+                    <div class="comment-header">
+                        <div class="comment-avatar" style="background:${author.color}">${author.initials}</div>
+                        <div class="comment-meta-wrapper">
+                            <div class="comment-author-line">
+                                <span class="comment-author">${author.name}</span>
+                                ${commentRecipient ? `
+                                    <span class="comment-arrow">→</span>
+                                    <span class="comment-recipient" style="background:${commentRecipient.color}">${commentRecipient.initials}</span>
+                                ` : ''}
+                                <span class="comment-time">• ${c.timestamp}</span>
+                            </div>
+                            ${commentLinkedDoc ? `
+                                <div class="comment-linked-doc" onclick="selectDoc('${commentLinkedDoc.id}')">
+                                    <span class="material-icons-outlined" style="font-size:12px">attach_file</span>
+                                    Re: ${commentLinkedDoc.name}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="comment-text">${c.text}</div>
+                </div>
+            `;
+        }).join('');
+
+    container.innerHTML = `
+        ${composerHtml}
+        <div class="comments-list">
+            ${commentsHtml}
+        </div>
+    `;
+}
+
 // Make functions globally available
 window.renderEventLog = renderEventLog;
 window.getSimulatedDuration = getSimulatedDuration;
 window.renderDocumentsTab = renderDocumentsTab;
 window.renderAskAITab = renderAskAITab;
 window.renderActionBar = renderActionBar;
+window.renderCommentsTab = renderCommentsTab;

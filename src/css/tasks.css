@@ -369,3 +369,2159 @@
     color: #d97706;
     flex-shrink: 0;
 }
+
+/* =============================================
+   NEW TASK SYSTEM STYLES
+   ============================================= */
+
+/* ---------------------------------------------
+   TASK TAB
+   --------------------------------------------- */
+
+.task-tab-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.task-tab-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.task-tab-count {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-500);
+    background: var(--gray-100);
+    padding: 3px 10px;
+    border-radius: 100px;
+}
+
+.task-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 20px;
+    text-align: center;
+}
+
+.task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* ---------------------------------------------
+   TASK CARD (clickable card in list)
+   --------------------------------------------- */
+
+.task-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: white;
+}
+
+.task-card:hover {
+    border-color: var(--gray-300);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.task-card:last-child {
+    margin-bottom: 0;
+}
+
+.task-card-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.task-card-status-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    margin-top: 1px;
+}
+
+.task-card-status-icon .material-icons-outlined {
+    font-size: 22px;
+}
+
+.task-card-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.task-card-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-800);
+    line-height: 1.4;
+    margin-bottom: 4px;
+    /* Truncate long titles */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.task-card-title.completed {
+    text-decoration: line-through;
+    color: var(--gray-500);
+}
+
+.task-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.task-card-status-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.task-card-deadline {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--gray-500);
+}
+
+/* ---------------------------------------------
+   DEADLINE INDICATOR — Linear-style 3-state system
+   Used across: task cards, task detail, delegate modal, queue
+
+   States:
+   .deadline-overdue  → red (past due)
+   .deadline-soon     → amber/orange (0-7 days)
+   .deadline-normal   → grey (>7 days)
+   --------------------------------------------- */
+
+/* Icon-only indicator on task cards (compact) */
+.task-deadline-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    cursor: default;
+}
+
+.task-deadline-icon.deadline-overdue {
+    color: var(--danger);
+}
+
+.task-deadline-icon.deadline-soon {
+    color: var(--warning);
+}
+
+.task-deadline-icon.deadline-normal {
+    color: var(--gray-400);
+}
+
+/* Icon + text pair (for detail views and meta grids) */
+.task-deadline-pair {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.task-deadline-pair.deadline-overdue {
+    color: var(--danger);
+}
+
+.task-deadline-pair.deadline-soon {
+    color: #b45309;
+}
+
+.task-deadline-pair.deadline-soon .material-icons-outlined {
+    color: var(--warning);
+}
+
+.task-deadline-pair.deadline-normal {
+    color: var(--gray-500);
+}
+
+/* Queue sidebar deadline coloring */
+.queue-status.deadline-overdue {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.queue-status.deadline-soon {
+    color: #b45309;
+    font-weight: 600;
+}
+
+/* Delegate modal chip coloring */
+.delegate-chip.deadline-overdue {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.delegate-chip.deadline-soon {
+    color: #b45309;
+    border-color: var(--warning);
+}
+
+.task-card-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.task-card-chevron {
+    font-size: 18px;
+    color: var(--gray-400);
+}
+
+/* ---------------------------------------------
+   FILTER CHIPS (CS Task Tab)
+   --------------------------------------------- */
+
+.task-filter-chips {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.task-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--gray-200);
+    background: white;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.task-filter-chip:hover {
+    border-color: var(--gray-300);
+    background: var(--gray-50);
+}
+
+.task-filter-chip.active {
+    background: var(--gray-900);
+    color: white;
+    border-color: var(--gray-900);
+}
+
+.task-filter-chip-avatar {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.task-filter-chip.active .task-filter-chip-avatar {
+    box-shadow: 0 0 0 1.5px rgba(255,255,255,0.4);
+}
+
+/* ---------------------------------------------
+   CS TASK CARD V2 (flat list, rich content)
+   --------------------------------------------- */
+
+.task-card-v2 {
+    padding: 14px 16px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: white;
+}
+
+.task-card-v2:hover {
+    border-color: var(--gray-300);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.task-card-v2:last-child {
+    margin-bottom: 0;
+}
+
+.task-card-v2-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.task-card-v2-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+}
+
+.task-card-v2-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.task-card-v2-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-800);
+    line-height: 1.45;
+    /* Allow up to 3 lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.task-card-v2-title.completed {
+    text-decoration: line-through;
+    color: var(--gray-400);
+}
+
+.task-card-v2-menu {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--gray-400);
+    cursor: pointer;
+    transition: all 0.15s;
+    margin: -4px -4px 0 0;
+}
+
+.task-card-v2-menu:hover {
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+.task-card-v2-menu .material-icons-outlined {
+    font-size: 18px;
+}
+
+.task-card-v2-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-left: 30px; /* align with text, past the icon */
+}
+
+.task-card-v2-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.task-card-v2-detail:hover {
+    color: var(--primary);
+}
+
+.task-card-v2-assignee {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.task-card-v2-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+/* Cancelled card state */
+.task-card-v2.cancelled {
+    opacity: 0.6;
+    background: var(--gray-50);
+}
+
+.task-card-v2-title.cancelled {
+    text-decoration: line-through;
+    color: var(--gray-400);
+}
+
+/* Menu wrapper (positioned relative for dropdown) */
+.task-card-v2-menu-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* ---------------------------------------------
+   TASK MENU DROPDOWN (CS three-dot menu)
+   --------------------------------------------- */
+
+.task-menu-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 50;
+    min-width: 180px;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.06);
+    padding: 4px;
+    margin-top: 4px;
+}
+
+.task-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: background 0.1s;
+    text-align: left;
+}
+
+.task-menu-item:hover {
+    background: var(--gray-50);
+}
+
+.task-menu-item .material-icons-outlined {
+    font-size: 18px;
+    color: var(--gray-500);
+}
+
+.task-menu-item.danger {
+    color: #ef4444;
+}
+
+.task-menu-item.danger .material-icons-outlined {
+    color: #ef4444;
+}
+
+.task-menu-item.danger:hover {
+    background: #fef2f2;
+}
+
+/* ---------------------------------------------
+   STATUS PILLS (small counts)
+   --------------------------------------------- */
+
+.task-status-pills {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* ---------------------------------------------
+   CS: AO GROUP (in task tab)
+   --------------------------------------------- */
+
+.task-ao-group {
+    margin-bottom: 20px;
+}
+
+.task-ao-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.task-ao-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.task-ao-info {
+    flex: 1;
+}
+
+.task-ao-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.task-ao-role {
+    font-size: 11px;
+    color: var(--gray-500);
+}
+
+.task-ao-tasks {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------------------------------------------
+   CS: AO SUMMARY CARD (in overview tab)
+   --------------------------------------------- */
+
+.cs-ao-summary-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 8px;
+}
+
+.cs-ao-summary-card:hover {
+    border-color: var(--gray-300);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.cs-ao-summary-card:last-child {
+    margin-bottom: 0;
+}
+
+.cs-ao-summary-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cs-ao-summary-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.cs-ao-summary-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.cs-ao-summary-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.cs-ao-summary-role {
+    font-size: 11px;
+    color: var(--gray-500);
+}
+
+.cs-ao-summary-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* ---------------------------------------------
+   TASK DETAIL OVERLAY
+   Covers the entire details panel including tabs.
+   Shown/hidden via the .active class.
+   --------------------------------------------- */
+
+.task-detail-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    z-index: 50;
+    /* Flex column so body scrolls and footer sticks */
+    display: none;
+    flex-direction: column;
+    padding: 16px 16px 0 16px; /* no bottom padding — footer owns it */
+    overflow: hidden; /* body scrolls, not the overlay itself */
+}
+
+.task-detail-overlay.active {
+    display: flex;
+}
+
+/* ---------------------------------------------
+   TASK DETAIL PANEL (Redesigned to match Figma)
+   --------------------------------------------- */
+
+.task-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.task-detail-back {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.task-detail-back:hover {
+    background: var(--gray-100);
+    color: var(--gray-900);
+}
+
+.task-detail-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+    flex: 1;
+}
+
+/* Three-dot menu in task detail header (CS only) */
+.task-detail-menu-wrapper {
+    position: relative;
+    margin-left: auto;
+}
+
+.task-detail-menu-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.task-detail-menu-btn:hover {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+.task-detail-menu-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    min-width: 170px;
+    padding: 4px;
+    z-index: 100;
+}
+
+.task-detail-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    /* Scrollable area — takes all available space above the sticky footer */
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0; /* flex child needs this to allow shrinking */
+    padding-bottom: 16px;
+}
+
+/* --- Description card --- */
+.td-description-card {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--gray-700);
+    padding: 14px 16px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+}
+
+/* --- 2x2 Meta grid with dividers --- */
+.td-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    overflow: clip; /* clip preserves border-radius containment without affecting intrinsic sizing */
+}
+
+.td-meta-cell {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-bottom: 1px solid var(--gray-200);
+    border-right: 1px solid var(--gray-200);
+}
+
+/* Remove right border on every 2nd cell (right column) */
+.td-meta-cell:nth-child(2n) {
+    border-right: none;
+}
+
+/* Remove bottom border on last row */
+.td-meta-cell:nth-last-child(-n+2) {
+    border-bottom: none;
+}
+
+.td-meta-label {
+    font-size: 12px;
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+.td-meta-value {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.td-priority-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.td-priority-text {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.td-assignee-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 9px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+/* --- Sections (Feedback, Submissions) --- */
+.td-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.td-section-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-600);
+}
+
+.td-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.td-upload-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.td-upload-btn:hover {
+    background: var(--gray-100);
+    color: var(--primary);
+}
+
+/* --- Feedback card --- */
+.td-feedback-card {
+    padding: 12px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: white;
+}
+
+.td-feedback-card p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--gray-600);
+}
+
+.td-feedback-empty {
+    color: var(--gray-400) !important;
+    font-style: italic;
+}
+
+/* --- Document list (submission files) --- */
+.td-docs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.td-doc-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: white;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.td-doc-card:hover {
+    border-color: var(--gray-300);
+    background: var(--gray-50);
+}
+
+.td-doc-icon {
+    width: 40px;
+    height: 40px;
+    background: #fef2f2;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.td-doc-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.td-doc-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.td-doc-date {
+    font-size: 11px;
+    color: var(--gray-500);
+}
+
+.td-doc-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+/* New = attached but not submitted yet (blue) */
+.td-doc-badge--new {
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+/* Submitted = sent for review, waiting on CS (amber) */
+.td-doc-badge--submitted {
+    color: #92400e;
+    background: var(--warning-light);
+}
+
+/* Approved = CS approved (green) */
+.td-doc-badge--approved {
+    color: var(--success);
+    background: var(--success-light);
+}
+
+/* Sent back = CS wants revision (amber) */
+.td-doc-badge--sent-back {
+    color: #d97706;
+    background: #fffbeb;
+}
+
+.td-empty-docs {
+    font-size: 13px;
+    color: var(--gray-400);
+    margin: 0;
+    padding: 12px 0;
+}
+
+/* --- File upload area (attach document modal) --- */
+.file-upload-area {
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--radius-md);
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--gray-50);
+}
+
+.file-upload-area:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+/* --- Submit modal: inline upload area --- */
+.submit-upload-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    border: 1.5px dashed var(--gray-250, #d1d5db);
+    border-radius: var(--radius-md);
+    padding: 20px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--gray-50);
+}
+
+.submit-upload-area:hover {
+    border-color: var(--primary);
+    background: #f0f4ff;
+}
+
+/* File card inside the submit modal */
+.submit-modal-file-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: white;
+    border: 1px solid var(--gray-150, var(--gray-200));
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+}
+
+.submit-modal-file-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.submit-modal-file-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.submit-modal-file-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.submit-modal-file-size {
+    font-size: 11px;
+    color: var(--gray-400);
+}
+
+.submit-modal-file-remove {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--gray-400);
+    border-radius: var(--radius-sm);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+}
+
+.submit-modal-file-remove:hover {
+    color: var(--danger);
+    background: var(--danger-light, #fef2f2);
+}
+
+/* --- Task detail actions — sticky footer at bottom of overlay --- */
+.task-detail-actions {
+    flex-shrink: 0;
+    padding: 12px 0 16px;
+    border-top: 1px solid var(--gray-100);
+    background: white;
+}
+
+.task-detail-action-btn {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-lg);
+}
+
+/* --- Two-line rich action button (Option A) --- */
+.task-action-btn-rich {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 14px 20px 12px;
+}
+
+.task-action-btn-main {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.task-action-btn-sub {
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.75;
+}
+
+/* --- Hint text in the submit modal footer --- */
+.task-submit-hint {
+    font-size: 12px;
+    color: var(--gray-400);
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.task-detail-waiting {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    color: var(--gray-600);
+}
+
+/* ---------------------------------------------
+   DELEGATE MODAL — Compact Card Design
+   --------------------------------------------- */
+
+/* Section header: "Assign Task" label + "+ Add Task" button */
+.delegate-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.delegate-section-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.delegate-add-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: transparent;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.delegate-add-btn:hover {
+    background: var(--gray-50);
+    border-color: var(--gray-400);
+    color: var(--gray-800);
+}
+
+/* Empty state */
+.delegate-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 28px 16px;
+    border: 2px dashed var(--gray-200);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.delegate-empty:hover {
+    border-color: var(--gray-300);
+    background: var(--gray-50);
+}
+
+.delegate-empty p {
+    font-size: 13px;
+    color: var(--gray-400);
+    margin: 0;
+}
+
+/* Compact task card */
+.delegate-task-card {
+    position: relative;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-left: 3px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    padding: 12px 12px 10px;
+    margin-bottom: 8px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.delegate-task-card:hover {
+    border-color: var(--gray-300);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Top row: text input + three-dot menu */
+.delegate-task-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    position: relative;
+}
+
+.delegate-task-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--gray-800);
+    line-height: 1.4;
+    padding: 0;
+    resize: none;
+    overflow: hidden;
+    min-height: 20px;
+    background: transparent;
+}
+
+.delegate-task-input::placeholder {
+    color: var(--gray-400);
+}
+
+/* Three-dot more button */
+.delegate-more-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--gray-400);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+}
+
+.delegate-more-btn:hover {
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+.delegate-more-btn .material-icons-outlined {
+    font-size: 18px;
+}
+
+/* Chips row: priority + deadline chips, assignee avatar on right */
+.delegate-chips-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    position: relative;
+}
+
+.delegate-chips-left {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+}
+
+/* Inline chip button (priority, deadline) */
+.delegate-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.delegate-chip:hover {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+.delegate-chip .material-icons-outlined {
+    font-size: 14px;
+}
+
+/* Small dot for priority color */
+.delegate-priority-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Chip separator */
+.delegate-chips-left .delegate-chip + .delegate-chip {
+    margin-left: 2px;
+}
+
+/* Hidden date input (native picker) */
+.delegate-date-hidden {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* Assignee avatar (small circle on the right) */
+.delegate-assignee-wrap {
+    position: relative;
+}
+
+.delegate-assignee-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+}
+
+.delegate-assignee-avatar:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px white, 0 0 0 4px var(--gray-200);
+}
+
+/* Floating dropdown (for priority, assignee, more menu) */
+.delegate-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    min-width: 160px;
+    padding: 4px;
+    z-index: 100;
+    display: none;
+}
+
+.delegate-dropdown.open {
+    display: block;
+}
+
+/* Position dropdown variations */
+.delegate-more-dropdown {
+    top: 100%;
+    left: auto;
+    right: 0;
+}
+
+.delegate-priority-dropdown {
+    top: calc(100% + 4px);
+    left: 0;
+}
+
+.delegate-assignee-dropdown {
+    top: calc(100% + 4px);
+    right: 0;
+    left: auto;
+}
+
+/* Dropdown item */
+.delegate-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--gray-700);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.delegate-dropdown-item:hover {
+    background: var(--gray-50);
+}
+
+.delegate-dropdown-item.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.delegate-dropdown-item.danger {
+    color: var(--danger);
+}
+
+.delegate-dropdown-item.danger:hover {
+    background: var(--danger-light);
+}
+
+/* Small AO avatar in assignee dropdown */
+.delegate-ao-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+    flex-shrink: 0;
+}
+
+/* Dashed "add more" button below cards */
+.delegate-add-dashed {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 8px;
+    background: transparent;
+    border: 2px dashed var(--gray-200);
+    border-radius: var(--radius-md);
+    color: var(--gray-400);
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 4px;
+}
+
+.delegate-add-dashed:hover {
+    border-color: var(--gray-300);
+    color: var(--gray-600);
+    background: var(--gray-50);
+}
+
+/* Comments section at bottom */
+.delegate-comments-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--gray-100);
+}
+
+.delegate-comments-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-500);
+    margin-bottom: 8px;
+}
+
+.delegate-comments-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--gray-700);
+    resize: vertical;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+}
+
+.delegate-comments-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.delegate-comments-textarea::placeholder {
+    color: var(--gray-400);
+}
+
+/* Form elements used in other task modals */
+.form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.form-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--gray-700);
+    background: white;
+    cursor: pointer;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--gray-700);
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* =============================================
+   DELEGATE MODAL — PER-TASK NOTE
+   ============================================= */
+
+/* "+ Add note" link button inside delegate task card */
+.delegate-add-note-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px;
+    margin-top: 4px;
+    background: transparent;
+    border: none;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--gray-400);
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.delegate-add-note-btn:hover {
+    color: var(--gray-600);
+}
+
+/* Note textarea (appears when expanded) */
+.delegate-note-input {
+    width: 100%;
+    margin-top: 6px;
+    padding: 8px 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--gray-600);
+    line-height: 1.5;
+    resize: none;
+    overflow: hidden;
+    min-height: 36px;
+    background: var(--gray-50);
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+}
+
+.delegate-note-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+}
+
+.delegate-note-input::placeholder {
+    color: var(--gray-400);
+}
+
+/* =============================================
+   ACTIVITY THREAD — Connected timeline in Task Detail
+   ============================================= */
+
+/* Section label */
+.td-activity-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-600);
+}
+
+/* Thread container — left padding creates space for avatar column + connector line */
+.td-activity-thread {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    padding-left: 28px; /* Space for 24px avatar + 4px gap */
+}
+
+/* Single entry in the activity thread */
+.td-activity-entry {
+    position: relative;
+    padding: 0 0 20px 12px; /* left padding = gap between line and content */
+    background: none;
+    border: none;
+    border-radius: 0;
+}
+
+/* Vertical connecting line — thinner and lighter for a premium feel */
+.td-activity-entry::before {
+    content: '';
+    position: absolute;
+    left: -17px; /* Centered under the 24px avatar */
+    top: 26px;   /* Start below the avatar */
+    bottom: 0;
+    width: 1px;
+    background: var(--gray-150, #e8e8ec);
+}
+
+/* Last entry: no line extending below */
+.td-activity-entry:last-child::before {
+    display: none;
+}
+
+/* Mini avatar — replaces the old colored dot.
+   The avatar IS the timeline marker. Every entry anchors to a person. */
+.td-activity-avatar {
+    position: absolute;
+    left: -28px;
+    top: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    flex-shrink: 0;
+    z-index: 1;
+    box-shadow: 0 0 0 2px white; /* white ring so line doesn't overlap */
+}
+
+/* Author row: name + inline action + timestamp */
+.td-activity-author {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 4px;
+    min-height: 24px; /* Match avatar height so first line aligns */
+    padding-top: 3px;
+    flex-wrap: wrap;
+}
+
+.td-activity-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+/* Inline action text — reads as a sentence after the name.
+   e.g. "You requested a revision" or "Rohit Sharma submitted"
+   Color provides scannability without needing a loud badge. */
+.td-activity-action {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--gray-500);
+}
+
+.td-action--revision {
+    color: #b45309; /* Warm amber — signals attention needed */
+}
+
+.td-action--approved {
+    color: #15803d; /* Deep green — signals completion */
+}
+
+.td-action--submitted {
+    color: var(--gray-400); /* Neutral — just an update */
+}
+
+.td-action--cancelled {
+    color: #dc2626; /* Red — task was cancelled */
+}
+
+.td-action--reassigned {
+    color: #2563eb; /* Blue — reassignment */
+}
+
+.td-action--reopened {
+    color: #15803d; /* Green — task revived */
+}
+
+.td-activity-time {
+    font-size: 11px;
+    color: var(--gray-400);
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+/* Edit history change details */
+.td-history-changes {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.td-history-change {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--gray-600);
+    flex-wrap: wrap;
+}
+
+.td-history-field {
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+.td-history-old {
+    color: var(--gray-400);
+    text-decoration: line-through;
+}
+
+.td-history-new {
+    color: var(--gray-800);
+    font-weight: 500;
+}
+
+/* Comment text wrapper — handles show more/less */
+.td-activity-text-wrap {
+    margin: 0 0 6px 0;
+}
+
+/* When clamped, limit to 3 lines */
+.td-activity-clamped .td-activity-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* "Show more" / "Show less" toggle */
+.td-activity-show-more {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 500;
+    color: var(--primary);
+    cursor: pointer;
+    margin-top: 2px;
+}
+
+.td-activity-show-more:hover {
+    text-decoration: underline;
+}
+
+/* Comment text */
+.td-activity-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--gray-600);
+    margin: 0 0 6px 0;
+}
+
+/* Documents inside an activity entry — upgraded cards with file-type color accent */
+.td-activity-docs {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.td-activity-doc {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.td-activity-doc:hover {
+    background: white;
+    border-color: var(--gray-200);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* File type icon container — colored background square */
+.td-activity-doc-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid transparent; /* color set via inline style */
+}
+
+.td-activity-doc-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.td-activity-doc-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.td-activity-doc-size {
+    font-size: 11px;
+    color: var(--gray-400);
+}
+
+/* =============================================
+   CS REVIEW CARD — AO's submission shown prominently
+   ============================================= */
+
+.td-review-card {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.td-review-comment {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--gray-700);
+    margin: 0;
+}
+
+.td-review-docs {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Previous CS feedback — small quoted block */
+.td-review-prev-feedback {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    background: white;
+    border: 1px solid var(--gray-150, var(--gray-200));
+    border-radius: var(--radius-sm);
+    margin-top: 2px;
+}
+
+.td-review-prev-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.td-review-prev-text {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--gray-500);
+    margin: 2px 0 0 0;
+}
+
+/* =============================================
+   CS INSTRUCTIONS — Pinned block at bottom
+   ============================================= */
+
+.td-instructions-block {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: #f8fafc;
+    overflow: hidden;
+}
+
+.td-instructions-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.td-instructions-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.td-instructions-body {
+    padding: 12px 14px;
+}
+
+.td-instructions-author {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.td-instructions-text {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--gray-600);
+    margin: 0;
+}
+
+/* =============================================
+   DOC REMOVE BUTTON (X on hover for pending docs)
+   ============================================= */
+
+.td-doc-remove {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--gray-400);
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.td-doc-card:hover .td-doc-remove {
+    opacity: 1;
+}
+
+.td-doc-remove:hover {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.td-doc-remove .material-icons-outlined {
+    font-size: 16px;
+}
+
+/* ---------------------------------------------
+   CANCELLED TASK DETAIL STYLES
+   --------------------------------------------- */
+
+/* Strikethrough description for cancelled tasks */
+.td-description-cancelled {
+    text-decoration: line-through;
+    color: var(--gray-400);
+}
+
+/* Simplified 1x2 meta grid for cancelled tasks */
+.td-meta-grid--cancelled {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+}
+
+/* "Your Comments" / "Feedback from CS" section on cancelled tasks */
+.td-cancel-comments-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 8px;
+}
+
+.td-cancel-comments-body {
+    padding: 12px 16px;
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--gray-600);
+}
+
+.td-cancel-comments-body p {
+    margin: 0;
+}
+
+/* Dark "Task Cancelled" bar at the bottom of task detail */
+.task-cancelled-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--gray-800);
+    border-radius: var(--radius-lg);
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.task-cancelled-bar-close {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    border-radius: var(--radius-sm);
+    transition: color 0.15s;
+}
+
+.task-cancelled-bar-close:hover {
+    color: white;
+}
+
+/* ---------------------------------------------
+   EDIT TASK — Assignee Selector Dropdown
+   --------------------------------------------- */
+
+.edit-assignee-selector {
+    position: relative;
+}
+
+.edit-assignee-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    background: white;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: border-color 0.15s;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--gray-700);
+    text-align: left;
+}
+
+.edit-assignee-trigger:hover {
+    border-color: var(--gray-400);
+}
+
+.edit-assignee-trigger:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.edit-assignee-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.edit-assignee-name {
+    flex: 1;
+}
+
+.edit-assignee-arrow {
+    font-size: 20px;
+    color: var(--gray-400);
+    flex-shrink: 0;
+    transition: transform 0.15s;
+}
+
+.edit-assignee-dropdown.open ~ .edit-assignee-trigger .edit-assignee-arrow,
+.edit-assignee-trigger[aria-expanded="true"] .edit-assignee-arrow {
+    transform: rotate(180deg);
+}
+
+.edit-assignee-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.06);
+    padding: 4px;
+    z-index: 100;
+}
+
+.edit-assignee-dropdown.open {
+    display: block;
+}
+
+.edit-assignee-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--gray-700);
+    transition: background 0.1s;
+}
+
+.edit-assignee-option:hover {
+    background: var(--gray-50);
+}
+
+.edit-assignee-option.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.edit-assignee-option .edit-assignee-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+}
+
+/* ---------------------------------------------
+   READONLY TASK VIEW BANNER (DTO, EA)
+   --------------------------------------------- */
+
+.task-readonly-banner {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    margin: 0 0 8px 0;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-150, var(--gray-100));
+    border-radius: var(--radius-md);
+    color: var(--gray-500);
+    font-size: 12px;
+    font-weight: 500;
+}

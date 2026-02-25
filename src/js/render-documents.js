@@ -204,7 +204,7 @@ function renderDocumentsForAO(originalDoc, submissions, drafts, icons) {
                     <div class="doc-icon ${doc.type}"><span class="material-icons-outlined">${icons[doc.type]}</span></div>
                     <div class="doc-details">
                         <div class="doc-name">${doc.name}</div>
-                        <div class="doc-meta">${doc.size} • Sent to ${recipient.shortName} • ${doc.uploadedAt}</div>
+                        <div class="doc-meta">${doc.size} • Sent to ${recipient.shortName || recipient.name} • ${doc.uploadedAt}</div>
                         <div class="doc-badges">
                             <span class="doc-status ${statusClass}">${statusLabel}</span>
                             ${latestSubmission.round > 1 ? `<span class="doc-revision-badge">v${latestSubmission.round}</span>` : ''}
@@ -276,6 +276,19 @@ function renderDocumentsForAO(originalDoc, submissions, drafts, icons) {
 // ------------------------------------------
 
 function renderDocumentsForEA(originalDoc, submissions, drafts, icons) {
+    const csSubmissions = submissions.filter(s => s.submittedTo === 'cs' && s.status !== 'draft');
+
+    // Empty state when no documents exist yet
+    if (!originalDoc && csSubmissions.length === 0) {
+        return `
+            <div class="doc-empty-state">
+                <span class="material-icons-outlined" style="font-size:40px;color:var(--gray-300)">description</span>
+                <p style="font-size:14px;font-weight:500;color:var(--gray-600);margin:12px 0 4px">No documents yet</p>
+                <p style="font-size:12px;color:var(--gray-400)">Documents will appear here once a case is registered.</p>
+            </div>
+        `;
+    }
+
     let html = '';
 
     // SECTION 1: Incoming Document
@@ -296,7 +309,7 @@ function renderDocumentsForEA(originalDoc, submissions, drafts, icons) {
                         <span class="doc-status original">Original</span>
                         <div class="doc-source" style="margin-top:8px">
                             <div class="doc-source-avatar" style="background:${uploader.color}">${uploader.initials}</div>
-                            Registered by ${uploader.shortName}
+                            Registered by ${uploader.shortName || uploader.name}
                         </div>
                     </div>
                     <button class="doc-action-btn" onclick="event.stopPropagation(); addCommentForDoc('${originalDoc.id}')" title="Add comment">
@@ -311,7 +324,6 @@ function renderDocumentsForEA(originalDoc, submissions, drafts, icons) {
     }
 
     // SECTION 2: Case Activity (read only)
-    const csSubmissions = submissions.filter(s => s.submittedTo === 'cs' && s.status !== 'draft');
     if (csSubmissions.length > 0) {
         html += `
             <div class="doc-section">
@@ -349,6 +361,19 @@ function renderDocumentsForEA(originalDoc, submissions, drafts, icons) {
 // ------------------------------------------
 
 function renderDocumentsForDTO(originalDoc, submissions, drafts, icons) {
+    const allSubmittedDocs = submissions.flatMap(s => s.documents);
+
+    // Empty state when no documents exist yet
+    if (!originalDoc && allSubmittedDocs.length === 0) {
+        return `
+            <div class="doc-empty-state">
+                <span class="material-icons-outlined" style="font-size:40px;color:var(--gray-300)">description</span>
+                <p style="font-size:14px;font-weight:500;color:var(--gray-600);margin:12px 0 4px">No documents yet</p>
+                <p style="font-size:12px;color:var(--gray-400)">Documents will appear here once you register a case with files.</p>
+            </div>
+        `;
+    }
+
     let html = '';
 
     // SECTION 1: Your Submission
@@ -378,7 +403,6 @@ function renderDocumentsForDTO(originalDoc, submissions, drafts, icons) {
     }
 
     // SECTION 2: Case Progress (limited visibility)
-    const allSubmittedDocs = submissions.flatMap(s => s.documents);
     if (allSubmittedDocs.length > 0) {
         html += `
             <div class="doc-section">

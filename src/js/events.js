@@ -18,22 +18,32 @@ function switchRole(roleId) {
     const previousRole = state.currentRole;
     state.currentRole = roleId;
     state.highlightLatestEvent = false;
+    state.selectedTaskId = null;  // Close any open task detail when switching roles
+
+    // Remember the role across sessions
+    if (typeof caseManager !== 'undefined') {
+        caseManager.persistRole(roleId);
+    }
 
     // Add "viewed" event when switching to holder role
-    if (state.caseInfo.currentHolder === roleId && state.caseInfo.status === 'active') {
+    if (state.caseInfo.id && state.caseInfo.currentHolder === roleId && state.caseInfo.status === 'active') {
         const lastEvent = state.events[0];
         if (!(lastEvent && lastEvent.type === 'viewed' && lastEvent.actor === roleId)) {
             state.events.unshift({
                 id: Date.now(),
                 type: 'viewed',
                 actor: roleId,
-                timestamp: 'Just now'
+                timestamp: new Date().toISOString()
             });
         }
     }
 
     renderAll();
-    showToast(`Viewing as ${ROLES[roleId].name}`, 'success');
+    // Update notification badge for the new role
+    renderNotificationBadge();
+    // Use getAOInfo() so it works for dynamic AO ids (ao2, ao3) too
+    const roleInfo = getAOInfo(roleId) || ROLES[roleId];
+    showToast(`Viewing as ${roleInfo.name}`, 'success');
 }
 
 // ------------------------------------------
@@ -44,7 +54,7 @@ function selectDoc(docId) {
     state.selectedDocId = docId;
     renderDocTabs();
     renderDocContent();
-    renderDetailsTab();
+    renderOverviewTab();
     renderDocumentsTab();
 }
 
@@ -70,6 +80,13 @@ function selectSubmissionDoc(submissionId, docId) {
 // ------------------------------------------
 
 function switchTab(tabId) {
+    // Dismiss task detail overlay when navigating away from task tab
+    if (tabId !== 'task' && state.selectedTaskId) {
+        state.selectedTaskId = null;
+        const overlay = document.getElementById('task-detail-overlay');
+        if (overlay) overlay.classList.remove('active');
+    }
+
     state.activeTab = tabId;
 
     // Update tab buttons
@@ -77,11 +94,71 @@ function switchTab(tabId) {
         tab.classList.toggle('active', tab.dataset.tab === tabId);
     });
 
+    // Animate the sliding indicator under the active tab
+    updateTabIndicator();
+
     // Update tab content
     document.querySelectorAll('.tab-pane').forEach(pane => {
         pane.classList.toggle('active', pane.id === tabId + '-tab');
     });
+
+    // Render the appropriate tab content
+    if (tabId === 'overview') {
+        renderOverviewTab();
+    } else if (tabId === 'task') {
+        renderTaskTab();
+    } else if (tabId === 'activity') {
+        renderEventLog();
+    } else if (tabId === 'document') {
+        renderDocumentsTab();
+    } else if (tabId === 'comments') {
+        renderCommentsTab();
+    } else if (tabId === 'ask-ai') {
+        renderAskAITab();
+    }
 }
+
+/**
+ * Moves the sliding indicator bar to sit under the currently active tab.
+ * Uses requestAnimationFrame to track the tab's size as the label
+ * animates open/closed, so the indicator follows smoothly.
+ */
+let _indicatorRAF = null;
+function updateTabIndicator(animate) {
+    // Cancel any running animation loop
+    if (_indicatorRAF) cancelAnimationFrame(_indicatorRAF);
+
+    const activeTab = document.querySelector('.panel-tab.active');
+    const indicator = document.querySelector('.tab-indicator');
+    if (!activeTab || !indicator) return;
+
+    function positionIndicator() {
+        const tabsContainer = activeTab.parentElement;
+        const containerRect = tabsContainer.getBoundingClientRect();
+        const tabRect = activeTab.getBoundingClientRect();
+        indicator.style.left = (tabRect.left - containerRect.left) + 'px';
+        indicator.style.width = tabRect.width + 'px';
+    }
+
+    // Immediately position once
+    positionIndicator();
+
+    // If animating, keep tracking for 350ms (matches the CSS transition)
+    if (animate !== false) {
+        const start = performance.now();
+        function track(now) {
+            if (now - start < 350) {
+                positionIndicator();
+                _indicatorRAF = requestAnimationFrame(track);
+            } else {
+                positionIndicator(); // final snap
+                _indicatorRAF = null;
+            }
+        }
+        _indicatorRAF = requestAnimationFrame(track);
+    }
+}
+window.updateTabIndicator = updateTabIndicator;
 
 // ------------------------------------------
 // SECTION TOGGLES
@@ -89,7 +166,7 @@ function switchTab(tabId) {
 
 function toggleSection(sectionKey) {
     state.sectionStates[sectionKey] = !state.sectionStates[sectionKey];
-    renderDetailsTab();
+    renderOverviewTab();
 }
 
 function toggleAISummary(event, el) {
@@ -100,12 +177,12 @@ function toggleAISummary(event, el) {
 
 function toggleShowAllTasks() {
     state.showAllTasks = !state.showAllTasks;
-    renderDetailsTab();
+    renderOverviewTab();
 }
 
 function toggleShowAllComments() {
     state.showAllComments = !state.showAllComments;
-    renderDetailsTab();
+    renderOverviewTab();
 }
 
 function togglePreviousSubmissions() {
@@ -115,6 +192,11 @@ function togglePreviousSubmissions() {
 
 function expandEvents() {
     state.eventsExpanded = true;
+    renderEventLog();
+}
+
+function toggleEventFilter() {
+    state.eventsFilterMode = state.eventsFilterMode === 'all' ? 'decisions' : 'all';
     renderEventLog();
 }
 
@@ -134,12 +216,12 @@ function toggleTask(taskId) {
             type: 'completed',
             actor: state.currentRole,
             note: `Completed: "${task.title}"`,
-            timestamp: 'Just now'
+            timestamp: new Date().toISOString()
         });
         showToast('Task completed!', 'success');
     }
 
-    renderDetailsTab();
+    renderOverviewTab();
     renderEventLog();
 }
 
@@ -149,7 +231,7 @@ function toggleTask(taskId) {
 
 function goToEventLog() {
     state.highlightLatestEvent = true;
-    switchTab('event-log');
+    switchTab('activity');
     setTimeout(() => {
         state.highlightLatestEvent = false;
         renderEventLog();
@@ -157,18 +239,7 @@ function goToEventLog() {
 }
 
 function goToComments() {
-    switchTab('details');
-    state.sectionStates.comments = true;
-    renderDetailsTab();
-
-    setTimeout(() => {
-        const commentsSection = document.getElementById('comments-section');
-        if (commentsSection) {
-            commentsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            commentsSection.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.3)';
-            setTimeout(() => { commentsSection.style.boxShadow = ''; }, 2000);
-        }
-    }, 100);
+    switchTab('comments');
 }
 
 // ------------------------------------------
@@ -199,7 +270,7 @@ function changePriority(priority) {
         type: 'priority_changed',
         actor: state.currentRole,
         note: `Changed priority from ${oldPriority} to ${priority}`,
-        timestamp: 'Just now'
+        timestamp: new Date().toISOString()
     });
 
     renderAll();
@@ -252,7 +323,7 @@ function changeDueDate(dateValue) {
         type: 'due_date_changed',
         actor: state.currentRole,
         note: `Changed due date from ${oldDate} to ${state.caseInfo.dueDate}`,
-        timestamp: 'Just now'
+        timestamp: new Date().toISOString()
     });
 
     // Close the picker
@@ -267,12 +338,20 @@ function changeDueDate(dateValue) {
 // DEMO RESET
 // ------------------------------------------
 
-function resetDemo() {
-    state = getInitialState();
-    window.state = state;
-    renderAll();
-    renderAskAITab();
-    showToast('Demo reset successfully!', 'success');
+async function resetDemo() {
+    if (typeof caseManager !== 'undefined') {
+        // Clear all saved cases, files, and metadata from IndexedDB
+        await caseManager.resetAll();
+        renderAskAITab();
+        showToast('All cases cleared!', 'success');
+    } else {
+        // Fallback: just reset in-memory state
+        state = getInitialState();
+        window.state = state;
+        renderAll();
+        renderAskAITab();
+        showToast('Demo reset successfully!', 'success');
+    }
 }
 
 // ------------------------------------------
@@ -361,7 +440,7 @@ function canSendComment() {
 function toggleRecipientDropdown() {
     state.commentInput.dropdownOpen = !state.commentInput.dropdownOpen;
     state.commentInput.highlightedIndex = 0;
-    renderDetailsTab();
+    renderOverviewTab();
 
     if (state.commentInput.dropdownOpen) {
         // Add outside click listener
@@ -382,7 +461,7 @@ function closeMentionDropdownOnOutsideClick(e) {
 function closeMentionDropdown() {
     state.commentInput.dropdownOpen = false;
     document.removeEventListener('click', closeMentionDropdownOnOutsideClick);
-    renderDetailsTab();
+    renderOverviewTab();
 }
 
 // Highlight a specific option in dropdown (for keyboard nav)
@@ -405,7 +484,7 @@ function selectCommentRecipient(roleId) {
     state.commentInput.recipient = roleId;
     state.commentInput.dropdownOpen = false;
     document.removeEventListener('click', closeMentionDropdownOnOutsideClick);
-    renderDetailsTab();
+    renderOverviewTab();
 
     // Focus textarea after selection
     setTimeout(() => {
@@ -417,7 +496,7 @@ function selectCommentRecipient(roleId) {
 // Clear the selected recipient
 function clearCommentRecipient() {
     state.commentInput.recipient = null;
-    renderDetailsTab();
+    renderOverviewTab();
 
     // Focus textarea
     setTimeout(() => {
@@ -429,7 +508,7 @@ function clearCommentRecipient() {
 // Clear linked document
 function clearLinkedDoc() {
     state.commentInput.linkedDocId = null;
-    renderDetailsTab();
+    renderOverviewTab();
 }
 
 // Handle text input in comment textarea
@@ -490,7 +569,7 @@ function submitComment() {
         author: state.currentRole,
         recipient: state.commentInput.recipient,
         text: state.commentInput.text.trim(),
-        timestamp: 'Just now',
+        timestamp: new Date().toISOString(),
         linkedDocId: state.commentInput.linkedDocId
     };
 
@@ -504,8 +583,21 @@ function submitComment() {
         id: Date.now() + 1,
         type: 'comment',
         actor: state.currentRole,
-        note: `Sent message to ${recipient.shortName}`,
-        timestamp: 'Just now'
+        note: `Sent message to ${recipient.shortName || recipient.name}`,
+        timestamp: new Date().toISOString()
+    });
+
+    // Notify the comment recipient
+    addNotification({
+        id: 'notif-' + Date.now() + '-comment',
+        type: 'comment_received',
+        icon: 'chat',
+        iconColor: '#2563eb',
+        title: `New message from ${author.name}`,
+        subtitle: `"${newComment.text.length > 50 ? newComment.text.slice(0, 50) + '…' : newComment.text}"`,
+        targetRole: state.commentInput.recipient,
+        timestamp: new Date().toISOString(),
+        read: false
     });
 
     // Reset input state
@@ -518,7 +610,7 @@ function submitComment() {
     };
 
     // Re-render
-    renderDetailsTab();
+    renderOverviewTab();
     renderEventLog();
 
     showToast(`Message sent to ${recipient.name}`, 'success');
@@ -528,8 +620,8 @@ function submitComment() {
 function addCommentForDoc(docId) {
     state.commentInput.linkedDocId = docId;
     state.sectionStates.comments = true;
-    switchTab('details');
-    renderDetailsTab();
+    switchTab('overview');
+    renderOverviewTab();
 
     // Scroll to and focus comment input
     setTimeout(() => {
@@ -540,6 +632,42 @@ function addCommentForDoc(docId) {
         const textarea = document.getElementById('comment-textarea');
         if (textarea) textarea.focus();
     }, 100);
+}
+
+// ------------------------------------------
+// HEADER DROPDOWNS
+// ------------------------------------------
+
+
+
+function toggleActionsDropdown(event) {
+    event.stopPropagation();
+    const dropdown = document.getElementById('actions-dropdown');
+    closeAllDropdowns();
+    dropdown.classList.toggle('show');
+
+    // Close on outside click
+    if (dropdown.classList.contains('show')) {
+        setTimeout(() => {
+            document.addEventListener('click', closeDropdownsOnOutsideClick);
+        }, 0);
+    }
+}
+
+function closeAllDropdowns() {
+    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+        menu.classList.remove('show');
+    });
+    // Also close notification dropdown
+    const notifDropdown = document.getElementById('notification-dropdown');
+    if (notifDropdown) notifDropdown.classList.remove('show');
+}
+
+function closeDropdownsOnOutsideClick(e) {
+    if (!e.target.closest('.header-dropdown') && !e.target.closest('.notif-wrapper')) {
+        closeAllDropdowns();
+        document.removeEventListener('click', closeDropdownsOnOutsideClick);
+    }
 }
 
 // ------------------------------------------
@@ -574,7 +702,198 @@ function createToastContainer() {
     return container;
 }
 
+// ------------------------------------------
+// SNACKBAR (dark bottom bar — different from toast)
+// ------------------------------------------
+// A dark bar that appears at the bottom center, like "Task Cancelled".
+// Stays until dismissed or auto-hides after 5 seconds.
+
+function showSnackbar(message) {
+    // Remove any existing snackbar
+    const existing = document.querySelector('.snackbar');
+    if (existing) existing.remove();
+
+    const snackbar = document.createElement('div');
+    snackbar.className = 'snackbar';
+    snackbar.innerHTML = `
+        <span class="snackbar-text">${message}</span>
+        <button class="snackbar-close" onclick="this.parentElement.remove()">
+            <span class="material-icons-outlined" style="font-size:18px">close</span>
+        </button>
+    `;
+    document.body.appendChild(snackbar);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (snackbar.parentElement) {
+            snackbar.style.animation = 'snackbarSlideUp 0.3s ease reverse forwards';
+            setTimeout(() => snackbar.remove(), 300);
+        }
+    }, 5000);
+}
+
+// ------------------------------------------
+// NOTIFICATION SYSTEM
+// ------------------------------------------
+// In-app notifications shown in the bell icon dropdown.
+// Notifications are role-scoped: each notification has a targetRole,
+// and only shows when viewing as that role.
+
+function addNotification(notif) {
+    if (!state.notifications) state.notifications = [];
+    state.notifications.unshift(notif);
+    renderNotificationBadge();
+}
+
+// Get notifications for the current role
+function getNotificationsForRole(role) {
+    if (!state.notifications) state.notifications = [];
+    return state.notifications.filter(n => n.targetRole === role);
+}
+
+function getUnreadCountForRole(role) {
+    if (!state.notifications) state.notifications = [];
+    return state.notifications.filter(n => n.targetRole === role && !n.read).length;
+}
+
+function markNotificationRead(notifId) {
+    const notif = state.notifications.find(n => n.id === notifId);
+    if (notif) {
+        notif.read = true;
+        renderNotificationBadge();
+        renderNotificationDropdown();
+    }
+}
+
+function markAllNotificationsRead() {
+    const role = state.currentRole;
+    state.notifications.forEach(n => {
+        if (n.targetRole === role) n.read = true;
+    });
+    renderNotificationBadge();
+    renderNotificationDropdown();
+}
+
+// Render the red badge on the bell icon
+function renderNotificationBadge() {
+    const badge = document.getElementById('notif-badge');
+    if (!badge) return;
+    const count = getUnreadCountForRole(state.currentRole);
+    if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+// Toggle the notification dropdown
+function toggleNotificationDropdown(event) {
+    event.stopPropagation();
+    const dropdown = document.getElementById('notification-dropdown');
+    if (!dropdown) return;
+    const isOpen = dropdown.classList.contains('show');
+    closeAllDropdowns();
+    if (!isOpen) {
+        dropdown.classList.add('show');
+        renderNotificationDropdown();
+    }
+}
+
+// Render the notification dropdown content
+function renderNotificationDropdown() {
+    const body = document.getElementById('notification-dropdown-body');
+    if (!body) return;
+
+    const role = state.currentRole;
+    const allNotifs = getNotificationsForRole(role);
+    const unreadNotifs = allNotifs.filter(n => !n.read);
+    const activeTab = state._notifTab || 'all';
+    const displayNotifs = activeTab === 'unread' ? unreadNotifs : allNotifs;
+
+    // Update tab counts
+    const unreadTabLabel = document.getElementById('notif-unread-tab');
+    if (unreadTabLabel) {
+        unreadTabLabel.textContent = `Unread${unreadNotifs.length > 0 ? ' (' + unreadNotifs.length + ')' : ''}`;
+    }
+
+    // Update active tab styling
+    document.querySelectorAll('.notif-tab').forEach(t => t.classList.remove('active'));
+    const activeTabEl = document.getElementById(activeTab === 'unread' ? 'notif-unread-tab' : 'notif-all-tab');
+    if (activeTabEl) activeTabEl.classList.add('active');
+
+    if (displayNotifs.length === 0) {
+        body.innerHTML = `
+            <div class="notif-empty">
+                <span class="material-icons-outlined" style="font-size:32px;color:var(--gray-300)">notifications_none</span>
+                <p>No ${activeTab === 'unread' ? 'unread ' : ''}notifications</p>
+            </div>
+        `;
+        return;
+    }
+
+    body.innerHTML = displayNotifs.map(notif => {
+        const timeStr = formatRelativeTime(notif.timestamp);
+        return `
+            <div class="notif-item ${notif.read ? '' : 'unread'}" onclick="handleNotificationClick('${notif.id}')">
+                <div class="notif-item-icon" style="color:${notif.iconColor || 'var(--gray-500)'}">
+                    <span class="material-icons-outlined">${notif.icon || 'info'}</span>
+                </div>
+                <div class="notif-item-content">
+                    <div class="notif-item-title">${notif.title}</div>
+                    ${notif.subtitle ? `<div class="notif-item-subtitle">${notif.subtitle}</div>` : ''}
+                </div>
+                <div class="notif-item-meta">
+                    <span class="notif-item-time">${timeStr}</span>
+                    ${!notif.read ? '<span class="notif-unread-dot"></span>' : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Switch notification tab (All / Unread)
+function switchNotifTab(tab) {
+    state._notifTab = tab;
+    renderNotificationDropdown();
+}
+
+// Handle clicking a notification item
+function handleNotificationClick(notifId) {
+    const notif = state.notifications.find(n => n.id === notifId);
+    if (!notif) return;
+
+    // Mark as read
+    notif.read = true;
+    renderNotificationBadge();
+
+    // Navigate to the relevant task if applicable
+    if (notif.taskId) {
+        const dropdown = document.getElementById('notification-dropdown');
+        if (dropdown) dropdown.classList.remove('show');
+        openTaskDetail(notif.taskId);
+    }
+
+    renderNotificationDropdown();
+}
+
+// ------------------------------------------
+// SIDEBAR TOGGLE
+// ------------------------------------------
+
+function toggleCaseSidebar() {
+    const sidebar = document.getElementById('case-sidebar');
+    if (!sidebar) return;
+
+    sidebar.classList.toggle('collapsed');
+    const isCollapsed = sidebar.classList.contains('collapsed');
+
+    // Remember the state across refreshes
+    localStorage.setItem('sidebarCollapsed', isCollapsed ? 'true' : 'false');
+}
+
 // Make functions globally available
+window.toggleCaseSidebar = toggleCaseSidebar;
 window.switchRole = switchRole;
 window.selectDoc = selectDoc;
 window.viewDocFromEventLog = viewDocFromEventLog;
@@ -586,6 +905,7 @@ window.toggleShowAllTasks = toggleShowAllTasks;
 window.toggleShowAllComments = toggleShowAllComments;
 window.togglePreviousSubmissions = togglePreviousSubmissions;
 window.expandEvents = expandEvents;
+window.toggleEventFilter = toggleEventFilter;
 window.toggleTask = toggleTask;
 window.goToEventLog = goToEventLog;
 window.goToComments = goToComments;
@@ -609,3 +929,16 @@ window.clearLinkedDoc = clearLinkedDoc;
 window.handleCommentInput = handleCommentInput;
 window.handleCommentKeydown = handleCommentKeydown;
 window.submitComment = submitComment;
+window.toggleActionsDropdown = toggleActionsDropdown;
+window.closeAllDropdowns = closeAllDropdowns;
+window.showSnackbar = showSnackbar;
+window.addNotification = addNotification;
+window.getNotificationsForRole = getNotificationsForRole;
+window.getUnreadCountForRole = getUnreadCountForRole;
+window.markNotificationRead = markNotificationRead;
+window.markAllNotificationsRead = markAllNotificationsRead;
+window.renderNotificationBadge = renderNotificationBadge;
+window.toggleNotificationDropdown = toggleNotificationDropdown;
+window.renderNotificationDropdown = renderNotificationDropdown;
+window.switchNotifTab = switchNotifTab;
+window.handleNotificationClick = handleNotificationClick;

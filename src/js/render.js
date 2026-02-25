@@ -15,47 +15,175 @@
 // Call this after any state change to update the entire UI
 
 function renderAll() {
-    renderRoles();
-    renderQueue();
-    renderQuickActions();
-    renderDocTabs();
-    renderDocContent();
-    renderDetailsTab();
-    renderEventLog();
-    renderDocumentsTab();
-    renderActionBar();
+    try { renderHeaderRoleSwitcher(); } catch(e) { console.error('renderHeaderRoleSwitcher:', e); }
+    try { renderCaseTitle(); } catch(e) { console.error('renderCaseTitle:', e); }
+    try { renderActionsDropdown(); } catch(e) { console.error('renderActionsDropdown:', e); }
+    if (typeof renderCaseQueue === 'function') {
+        try { renderCaseQueue(); } catch(e) { console.error('renderCaseQueue:', e); }
+    }
+    try { updateTaskTabVisibility(); } catch(e) { console.error('updateTaskTabVisibility:', e); }
+    try { renderDocTabs(); } catch(e) { console.error('renderDocTabs:', e); }
+    try { renderDocContent(); } catch(e) { console.error('renderDocContent:', e); }
+    try { renderOverviewTab(); } catch(e) { console.error('renderOverviewTab:', e); }
+    try { renderTaskTab(); } catch(e) { console.error('renderTaskTab:', e); }
+    try { renderEventLog(); } catch(e) { console.error('renderEventLog:', e); }
+    try { renderDocumentsTab(); } catch(e) { console.error('renderDocumentsTab:', e); }
+    try { renderCommentsTab(); } catch(e) { console.error('renderCommentsTab:', e); }
+    try { renderNotificationBadge(); } catch(e) { console.error('renderNotificationBadge:', e); }
+
+    // Auto-save the current case to IndexedDB (debounced)
+    if (typeof caseManager !== 'undefined') {
+        caseManager.saveCurrent();
+    }
+
+    // Position the sliding tab indicator after render (no animation loop on initial paint)
+    requestAnimationFrame(() => {
+        if (typeof updateTabIndicator === 'function') updateTabIndicator(false);
+    });
 }
 
 // ------------------------------------------
-// ROLE SELECTOR (Left sidebar)
+// HEADER - CASE TITLE (dynamic)
 // ------------------------------------------
-// Shows the role avatars for switching between different users
+// Updates the header to show the current case title
 
-function renderRoles() {
-    const container = document.getElementById('role-selector');
-    container.innerHTML = Object.values(ROLES).map(role => {
+function renderCaseTitle() {
+    const titleEl = document.querySelector('.case-title');
+    if (!titleEl) return;
+
+    if (state.caseInfo.id) {
+        titleEl.textContent = state.caseInfo.title || 'Untitled Case';
+    } else {
+        titleEl.textContent = 'IDMS v6';
+    }
+}
+
+// ------------------------------------------
+// HEADER - ROLE SWITCHER
+// ------------------------------------------
+// Renders the role switcher button and dropdown in the header
+
+function renderHeaderRoleSwitcher() {
+    const bar = document.getElementById('persona-bar');
+    if (!bar) return;
+
+    const isClosed = state.caseInfo.status === 'closed';
+
+    // Build the list of roles to show:
+    // Always show the 4 core roles, plus any extra AOs with delegated tasks
+    const coreRoles = Object.values(ROLES);
+    const assignedAOIds = getAssignedAOs();
+    const extraAOs = assignedAOIds
+        .filter(aoId => !ROLES[aoId])
+        .map(aoId => getAOInfo(aoId))
+        .filter(Boolean);
+
+    const allRoles = [];
+    coreRoles.forEach(role => {
+        allRoles.push(role);
+        if (role.id === 'ao') {
+            extraAOs.forEach(ao => allRoles.push(ao));
+        }
+    });
+
+    // Render avatar circles — one click to switch, always visible
+    bar.innerHTML = allRoles.map(role => {
         const isActive = state.currentRole === role.id;
-        const hasCase = state.caseInfo.currentHolder === role.id && state.caseInfo.status === 'active';
+        const hasCase = state.caseInfo.currentHolder === role.id && !isClosed;
         return `
-            <div class="role-avatar-btn tooltip ${isActive ? 'active' : ''}"
-                 style="background:${role.color}"
-                 onclick="switchRole('${role.id}')"
-                 data-tooltip="${role.name}">
-                ${role.initials}
-                ${hasCase ? '<span class="role-badge">1</span>' : ''}
+            <div class="persona-avatar-wrapper" title="${role.name} — ${role.roleTitle}">
+                <div class="persona-avatar ${isActive ? 'active' : ''}"
+                     style="background:${role.color}"
+                     onclick="switchRole('${role.id}')">
+                    ${role.initials}
+                </div>
+                ${hasCase ? '<span class="persona-holder-dot"></span>' : ''}
             </div>
         `;
     }).join('');
+}
 
-    // Update current role display
-    const currentRole = ROLES[state.currentRole];
-    document.getElementById('current-role-info').innerHTML = `
-        <div class="current-role-avatar" style="background:${currentRole.color}">${currentRole.initials}</div>
-        <div>
-            <div class="current-role-name">${currentRole.name}</div>
-            <div class="current-role-title">${currentRole.title}</div>
-        </div>
-    `;
+// ------------------------------------------
+// HEADER - ACTIONS DROPDOWN
+// ------------------------------------------
+// Renders role-specific actions in the dropdown
+
+function renderActionsDropdown() {
+    const dropdown = document.getElementById('actions-dropdown');
+    if (!dropdown) return;
+
+    // No case loaded — hide actions
+    if (!state.caseInfo.id) {
+        dropdown.innerHTML = '';
+        return;
+    }
+
+    const role = state.currentRole;
+    const isHolder = state.caseInfo.currentHolder === role;
+    const isClosed = state.caseInfo.status === 'closed';
+
+    // AO is a special case: they're never the case holder anymore,
+    // but they should still see task actions if they have assigned tasks.
+    const aoHasTasks = isAORole(role) && state.tasks.some(t => t.assignee === role);
+
+    if (isClosed || (!isHolder && !aoHasTasks)) {
+        dropdown.innerHTML = `
+            <div class="dropdown-item" style="color:var(--gray-400);cursor:default">
+                No actions available
+            </div>
+        `;
+        return;
+    }
+
+    let actions = [];
+    const showApprovalInDropdown = UI_CONFIG.approvalButtons.showInDropdown && state.caseInfo.pendingAction === 'approve';
+
+    if (role === 'dto') {
+        actions = [
+            { label: 'Forward Case', icon: 'send', action: 'openSendModal(\'dto-ea\'); closeAllDropdowns();' }
+        ];
+    } else if (role === 'ea') {
+        actions = [
+            { label: 'Forward Case', icon: 'send', action: 'openSendModal(\'ea-cs\'); closeAllDropdowns();' }
+        ];
+    } else if (role === 'cs') {
+        // Add approve/reject at the top if approval is pending and dropdown option is enabled
+        if (showApprovalInDropdown) {
+            actions.push(
+                { label: 'Approve Document', icon: 'check_circle', action: 'handleApprove(); closeAllDropdowns();', variant: 'success' },
+                { label: 'Reject Document', icon: 'cancel', action: 'handleReject(); closeAllDropdowns();', variant: 'danger' },
+                { isDivider: true }
+            );
+        }
+
+        actions = actions.concat([
+            { label: 'Delegate Case', icon: 'person_add', action: 'openDelegateModal(); closeAllDropdowns();' },
+            { label: 'Close Case', icon: 'check_circle', action: 'openCloseModal(); closeAllDropdowns();' },
+            { label: 'Discard Case', icon: 'cancel', action: 'openSendModal(\'cs-reject\'); closeAllDropdowns();' }
+        ]);
+    } else if (isAORole(role)) {
+        // AO sees task-level actions (they're not the case holder, but they have tasks)
+        const myTasks = state.tasks.filter(t => t.assignee === role);
+        const hasSubmittableTasks = myTasks.some(t =>
+            t.status === TASK_STATUS.IN_PROGRESS || t.status === TASK_STATUS.SENT_BACK
+        );
+        actions = [
+            { label: 'Submit Work', icon: 'upload', action: 'openSendModal(\'ao-cs\'); closeAllDropdowns();', enabled: hasSubmittableTasks }
+        ];
+    }
+
+    dropdown.innerHTML = actions.map(action => {
+        if (action.isDivider) {
+            return '<div class="dropdown-divider"></div>';
+        }
+        return `
+            <div class="dropdown-item ${action.enabled === false ? 'disabled' : ''} ${action.variant ? 'dropdown-item-' + action.variant : ''}"
+                 onclick="${action.enabled !== false ? action.action : 'return false;'}">
+                <span class="material-icons-outlined" style="font-size:18px">${action.icon}</span>
+                ${action.label}
+            </div>
+        `;
+    }).join('');
 }
 
 // ------------------------------------------
@@ -78,9 +206,10 @@ function renderQueue() {
         return;
     }
 
-    const from = state.caseInfo.previousHolder
-        ? ROLES[state.caseInfo.previousHolder].name
-        : 'System';
+    const fromInfo = state.caseInfo.previousHolder
+        ? (getAOInfo(state.caseInfo.previousHolder) || ROLES[state.caseInfo.previousHolder])
+        : null;
+    const from = fromInfo ? fromInfo.name : 'System';
 
     container.innerHTML = `
         <div class="queue-item active">
@@ -88,10 +217,13 @@ function renderQueue() {
             <div class="queue-content">
                 <div class="queue-doc-title">${state.caseInfo.title}</div>
                 <div class="queue-doc-meta">${state.caseInfo.id} • From: ${from}</div>
-                <div class="queue-status">
-                    <span class="material-icons-outlined" style="font-size:12px">schedule</span>
-                    Due ${state.caseInfo.dueDate}
-                </div>
+                ${(() => {
+                    const qDl = getDeadlineIndicator(state.caseInfo.dueDateDisplay || state.caseInfo.dueDate, state.caseInfo.dueDateISO);
+                    return `<div class="queue-status ${qDl.show ? qDl.cssClass : ''}" ${qDl.show ? `title="${qDl.tooltip}"` : ''}>
+                        <span class="material-icons-outlined" style="font-size:12px">${qDl.show ? qDl.icon : 'schedule'}</span>
+                        ${qDl.show && qDl.daysLeft < 0 ? qDl.tooltip : 'Due ' + state.caseInfo.dueDate}
+                    </div>`;
+                })()}
             </div>
         </div>
     `;
@@ -105,8 +237,10 @@ function renderQuickActions() {
     const container = document.getElementById('quick-actions');
     const isHolder = state.caseInfo.currentHolder === state.currentRole;
     const isClosed = state.caseInfo.status === 'closed';
+    // AO with tasks should not see "viewing mode"
+    const aoHasWork = isAORole(state.currentRole) && state.tasks.some(t => t.assignee === state.currentRole);
 
-    if (!isHolder || isClosed) {
+    if (isClosed || (!isHolder && !aoHasWork)) {
         container.innerHTML = `
             <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--gray-50);border-radius:var(--radius-md);color:var(--gray-500);font-size:12px">
                 <span class="material-icons-outlined" style="font-size:16px">visibility</span>
@@ -125,6 +259,7 @@ function renderQuickActions() {
 
 function renderDocTabs() {
     const container = document.getElementById('doc-tabs');
+    if (!state.caseInfo.id) { container.innerHTML = ''; return; }
     const visibleDocs = getVisibleDocuments();
     container.innerHTML = visibleDocs.map(doc => `
         <button class="doc-tab ${doc.id === state.selectedDocId ? 'active' : ''}"
@@ -140,24 +275,112 @@ function renderDocTabs() {
 
 function renderDocContent() {
     const container = document.getElementById('doc-page-content');
+    const docBody = container.parentElement; // .doc-body
+
+    // Reset the full-bleed mode (used for PDFs/images)
+    container.classList.remove('doc-page--full');
+    docBody.style.overflow = '';  // restore default scrollbar
+
+    // No case loaded — show empty state
+    if (!state.caseInfo.id) {
+        if (typeof renderMainEmptyState === 'function') {
+            renderMainEmptyState();
+        }
+        return;
+    }
+
     const doc = findDocument(state.selectedDocId);
 
-    if (doc && doc.content) {
-        container.innerHTML = doc.content;
-    } else if (doc) {
-        // Document exists but has no preview content
-        const docTypeIcons = { pdf: '📄', excel: '📊', word: '📝' };
-        const uploader = ROLES[doc.uploadedBy];
+    if (!doc) {
+        // No document selected
         container.innerHTML = `
             <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:60px">
-                <div style="font-size:72px;margin-bottom:24px">${docTypeIcons[doc.type] || '📄'}</div>
-                <h2 style="font-size:24px;font-weight:600;color:var(--gray-900);margin-bottom:8px">${doc.name}</h2>
-                <p style="color:var(--gray-500);margin-bottom:24px">${doc.size} • Uploaded by ${uploader.name}</p>
-                <div style="background:var(--gray-100);border-radius:12px;padding:24px 32px;max-width:400px">
-                    <p style="color:var(--gray-600);font-size:14px">
-                        This document is available for download. Click the download button above to view the full content.
-                    </p>
-                </div>
+                <span class="material-icons-outlined" style="font-size:48px;color:var(--gray-300);margin-bottom:12px">description</span>
+                <p style="color:var(--gray-500);font-size:14px">Select a document to view</p>
+            </div>
+        `;
+        return;
+    }
+
+    // If the doc has a real file in IndexedDB, render it
+    if (doc.fileId && typeof caseManager !== 'undefined') {
+        renderRealDocument(container, doc);
+        return;
+    }
+
+    // Legacy path: HTML mock content
+    if (doc.content) {
+        container.innerHTML = doc.content;
+        return;
+    }
+
+    // Document exists but has no content and no file
+    const uploaderInfo = getAOInfo(doc.uploadedBy) || ROLES[doc.uploadedBy] || { name: 'Unknown' };
+    container.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:60px">
+            <span class="material-icons-outlined" style="font-size:64px;color:var(--gray-300);margin-bottom:16px">description</span>
+            <h2 style="font-size:20px;font-weight:600;color:var(--gray-900);margin-bottom:8px">${doc.name}</h2>
+            <p style="color:var(--gray-500);margin-bottom:24px">${doc.size || ''} ${uploaderInfo.name ? '• Uploaded by ' + uploaderInfo.name : ''}</p>
+        </div>
+    `;
+}
+
+// Render a real file from IndexedDB (PDF, image, or download card)
+async function renderRealDocument(container, doc) {
+    const docBody = container.parentElement; // .doc-body
+
+    // Show a loading indicator briefly
+    container.classList.remove('doc-page--full');
+    docBody.style.overflow = '';  // reset to default (auto)
+    container.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:center;height:100%">
+            <span class="material-icons-outlined" style="font-size:24px;color:var(--gray-400)">hourglass_top</span>
+        </div>
+    `;
+
+    const url = await caseManager.getFileUrl(doc.fileId);
+    if (!url) {
+        container.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:60px">
+                <span class="material-icons-outlined" style="font-size:48px;color:var(--danger);margin-bottom:12px">error_outline</span>
+                <p style="color:var(--gray-600)">Failed to load file</p>
+            </div>
+        `;
+        return;
+    }
+
+    if (doc.type === 'pdf') {
+        // PDF: fill the entire viewer area (remove doc-page padding/max-width)
+        // Hide outer scrollbar so only the PDF iframe's scrollbar shows
+        container.classList.add('doc-page--full');
+        docBody.style.overflow = 'hidden';
+        container.innerHTML = `
+            <iframe src="${url}" style="width:100%;height:100%;border:none;background:white" title="${doc.name}"></iframe>
+        `;
+    } else if (doc.type === 'image') {
+        // Image: fill the viewer area, hide outer scrollbar
+        container.classList.add('doc-page--full');
+        docBody.style.overflow = 'hidden';
+        container.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:center;height:100%;padding:20px;background:var(--gray-100)">
+                <img src="${url}" alt="${doc.name}" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+            </div>
+        `;
+    } else {
+        // Word, Excel, etc. — show a download card
+        const uploaderInfo = getAOInfo(doc.uploadedBy) || ROLES[doc.uploadedBy] || { name: 'Unknown' };
+        const typeIcons = { excel: 'table_chart', word: 'description', pdf: 'picture_as_pdf' };
+        const icon = typeIcons[doc.type] || 'insert_drive_file';
+
+        container.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:60px">
+                <span class="material-icons-outlined" style="font-size:64px;color:var(--primary);margin-bottom:16px">${icon}</span>
+                <h2 style="font-size:20px;font-weight:600;color:var(--gray-900);margin-bottom:8px">${doc.name}</h2>
+                <p style="color:var(--gray-500);margin-bottom:24px">${doc.size} • Uploaded by ${uploaderInfo.name}</p>
+                <button class="btn btn-primary" onclick="caseManager.downloadFile('${doc.fileId}')">
+                    <span class="material-icons-outlined" style="font-size:18px">download</span>
+                    Download to view
+                </button>
             </div>
         `;
     }
@@ -168,21 +391,26 @@ function renderDocContent() {
 // ------------------------------------------
 // The main details panel with status, tasks, comments, etc.
 
-function renderDetailsTab() {
-    const container = document.getElementById('details-tab');
-    const holder = ROLES[state.caseInfo.currentHolder];
+function renderOverviewTab() {
+    const container = document.getElementById('overview-tab');
+    if (!state.caseInfo.id) { container.innerHTML = ''; return; }
+    const holderInfo = getAOInfo(state.caseInfo.currentHolder) || ROLES[state.caseInfo.currentHolder];
     const isMe = state.caseInfo.currentHolder === state.currentRole;
     const isClosed = state.caseInfo.status === 'closed';
-    const roleConfig = ROLE_CONFIG[state.currentRole];
+    // For AO roles (ao2, ao3), fall back to the base 'ao' config
+    const roleConfig = ROLE_CONFIG[state.currentRole] || (isAORole(state.currentRole) ? ROLE_CONFIG['ao'] : null);
 
     let html = '';
 
     // Viewing mode indicator for non-holders
-    if (!isMe && !isClosed) {
+    // AO with assigned tasks should NOT see this — they're actively working
+    const aoHasWork = isAORole(state.currentRole) && state.tasks.some(t => t.assignee === state.currentRole);
+    if (!isMe && !isClosed && !aoHasWork) {
+        const currentRoleInfo = getAOInfo(state.currentRole) || ROLES[state.currentRole];
         html += `
             <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:linear-gradient(135deg,var(--gray-100) 0%,var(--gray-50) 100%);border:1px dashed var(--gray-300);border-radius:var(--radius-md);margin-bottom:12px;font-size:12px;color:var(--gray-600)">
                 <span class="material-icons-outlined" style="font-size:16px;color:var(--gray-400)">visibility</span>
-                <span>Viewing as <strong>${ROLES[state.currentRole].title}</strong> • Case is with ${holder.name}</span>
+                <span>Viewing as <strong>${currentRoleInfo.roleTitle}</strong> • Case is with ${holderInfo.name}</span>
             </div>
         `;
     }
@@ -203,11 +431,11 @@ function renderDetailsTab() {
     // Currently With card
     html += `
         <div class="current-holder" onclick="goToEventLog()">
-            <div class="holder-avatar" style="background:${holder.color}">${holder.initials}</div>
+            <div class="holder-avatar" style="background:${holderInfo.color}">${holderInfo.initials}</div>
             <div style="flex:1">
                 <div class="holder-label">Currently With</div>
-                <div class="holder-name">${holder.name}</div>
-                <div class="holder-role">${holder.title}</div>
+                <div class="holder-name">${holderInfo.name}</div>
+                <div class="holder-role">${holderInfo.roleTitle}</div>
             </div>
             ${isMe && !isClosed ? '<span class="holder-you-badge">YOU</span>' : ''}
             <span class="holder-hint">
@@ -218,8 +446,11 @@ function renderDetailsTab() {
     `;
 
     // Status Card
-    const daysRemaining = getDaysRemaining(state.caseInfo.dueDate);
-    const deadlineClass = daysRemaining <= 1 ? 'danger' : daysRemaining <= 3 ? 'warning' : '';
+    // Deadline indicator (Linear-style 3-state: overdue/soon/normal)
+    const caseDl = getDeadlineIndicator(state.caseInfo.dueDateDisplay, state.caseInfo.dueDateISO);
+    const deadlineClass = caseDl.cssClass === 'deadline-overdue' ? 'danger'
+                        : caseDl.cssClass === 'deadline-soon' ? 'warning'
+                        : '';
     const canChangePriority = state.currentRole === 'cs' && isMe && !isClosed;
     // EA and CS can change due date when they are the current holder
     const canChangeDueDate = (state.currentRole === 'cs' || state.currentRole === 'ea') && isMe && !isClosed;
@@ -261,8 +492,8 @@ function renderDetailsTab() {
                         <span class="status-value ${deadlineClass ? 'deadline-' + deadlineClass : ''}">
                             ${state.caseInfo.dueDateDisplay}
                         </span>
-                        ${deadlineClass === 'danger' ? '<span class="deadline-warning">⚠ Due Today!</span>' : ''}
-                        ${deadlineClass === 'warning' ? '<span class="deadline-warning warning">⏰ ' + daysRemaining + ' days left</span>' : ''}
+                        ${deadlineClass === 'danger' ? `<span class="deadline-warning">${caseDl.tooltip}</span>` : ''}
+                        ${deadlineClass === 'warning' ? `<span class="deadline-warning warning">${caseDl.tooltip}</span>` : ''}
                         <span class="material-icons-outlined edit-icon">edit</span>
                         <div class="due-date-picker" id="due-date-picker">
                             <input type="date" id="due-date-input" onchange="changeDueDate(this.value)">
@@ -271,8 +502,8 @@ function renderDetailsTab() {
                 ` : `
                     <span class="status-value ${deadlineClass ? 'deadline-' + deadlineClass : ''}">
                         ${state.caseInfo.dueDateDisplay}
-                        ${deadlineClass === 'danger' ? '<span class="deadline-warning">⚠ Due Today!</span>' : ''}
-                        ${deadlineClass === 'warning' ? '<span class="deadline-warning warning">⏰ ' + daysRemaining + ' days left</span>' : ''}
+                        ${deadlineClass === 'danger' ? `<span class="deadline-warning">${caseDl.tooltip}</span>` : ''}
+                        ${deadlineClass === 'warning' ? `<span class="deadline-warning warning">${caseDl.tooltip}</span>` : ''}
                     </span>
                 `}
             </div>
@@ -298,11 +529,45 @@ function renderDetailsTab() {
     container.innerHTML = html;
 }
 
+// ------------------------------------------
+// TASK TAB VISIBILITY
+// ------------------------------------------
+// CS and AO always see the Task tab.
+// DTO and EA only see it when tasks exist (tasks > 0).
+// This avoids showing an empty "No tasks" state to roles
+// that don't interact with tasks until work has been delegated.
+
+function updateTaskTabVisibility() {
+    const taskTabBtn = document.querySelector('.panel-tab[data-tab="task"]');
+    if (!taskTabBtn) return;
+
+    const role = state.currentRole;
+    const hasTasks = state.tasks && state.tasks.length > 0;
+
+    // CS and AO always see the Task tab
+    if (role === 'cs' || isAORole(role)) {
+        taskTabBtn.style.display = '';
+        return;
+    }
+
+    // DTO and EA: only show when tasks exist
+    if (hasTasks) {
+        taskTabBtn.style.display = '';
+    } else {
+        taskTabBtn.style.display = 'none';
+        // If they were on the task tab, switch to overview
+        if (state.activeTab === 'task') {
+            switchTab('overview');
+        }
+    }
+}
+
 // Make functions globally available
 window.renderAll = renderAll;
-window.renderRoles = renderRoles;
+window.renderHeaderRoleSwitcher = renderHeaderRoleSwitcher;
+window.renderActionsDropdown = renderActionsDropdown;
 window.renderQueue = renderQueue;
-window.renderQuickActions = renderQuickActions;
 window.renderDocTabs = renderDocTabs;
 window.renderDocContent = renderDocContent;
-window.renderDetailsTab = renderDetailsTab;
+window.renderOverviewTab = renderOverviewTab;
+window.updateTaskTabVisibility = updateTaskTabVisibility;

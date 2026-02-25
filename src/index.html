@@ -16,50 +16,83 @@
     <div class="app">
 
         <!-- ==========================================
-             LEFT SIDEBAR
+             TOP HEADER
              ========================================== -->
-        <aside class="sidebar">
-            <!-- Logo -->
-            <div class="sidebar-header">
-                <div class="logo">
-                    <div class="logo-icon">ID</div>
-                    IDMS v6
-                </div>
-                <button class="reset-btn" onclick="resetDemo()">
+        <header class="top-header">
+            <!-- Left: Case Title -->
+            <div class="header-left">
+                <button class="back-btn" onclick="window.history.back()">
+                    <span class="material-icons-outlined">chevron_left</span>
+                </button>
+                <h1 class="case-title">Budget 2025</h1>
+            </div>
+
+            <!-- Right: Controls -->
+            <div class="header-right">
+                <!-- Reset Button -->
+                <button class="reset-btn" onclick="resetDemo()" title="Reset demo">
                     <span class="material-icons-outlined" style="font-size:14px">refresh</span>
                     Reset
                 </button>
-            </div>
-
-            <!-- Search -->
-            <div class="search-box">
-                <div class="search-input-wrapper">
-                    <span class="material-icons-outlined">search</span>
-                    <input type="text" class="search-input" id="search-input" placeholder="Search cases...">
-                    <span class="search-shortcut">⌘K</span>
+                <!-- Actions Dropdown -->
+                <div class="header-dropdown">
+                    <button class="header-dropdown-btn actions-btn" id="actions-btn" onclick="toggleActionsDropdown(event)">
+                        <span>Actions</span>
+                        <span class="material-icons-outlined" style="font-size:16px">expand_more</span>
+                    </button>
+                    <div class="dropdown-menu" id="actions-dropdown">
+                        <!-- Rendered by JavaScript based on role -->
+                    </div>
                 </div>
-            </div>
 
-            <!-- Role Switcher (for demo) -->
-            <div class="role-section">
-                <div class="role-label">View As Role</div>
-                <div class="role-selector" id="role-selector">
+                <!-- Notifications -->
+                <div class="notif-wrapper">
+                    <button class="header-icon-btn" onclick="toggleNotificationDropdown(event)">
+                        <span class="material-icons-outlined">notifications</span>
+                        <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+                    </button>
+                    <div class="notif-dropdown" id="notification-dropdown">
+                        <div class="notif-dropdown-header">
+                            <span class="notif-dropdown-title">Notifications</span>
+                            <button class="notif-mark-read" onclick="markAllNotificationsRead()">Mark all as read</button>
+                        </div>
+                        <div class="notif-tabs">
+                            <button class="notif-tab active" id="notif-all-tab" onclick="switchNotifTab('all')">All</button>
+                            <button class="notif-tab" id="notif-unread-tab" onclick="switchNotifTab('unread')">Unread</button>
+                        </div>
+                        <div class="notif-dropdown-body" id="notification-dropdown-body">
+                            <div class="notif-empty">
+                                <span class="material-icons-outlined" style="font-size:32px;color:var(--gray-300)">notifications_none</span>
+                                <p>No notifications</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Persona Bar - always visible role switcher -->
+                <div class="persona-bar" id="persona-bar">
                     <!-- Rendered by JavaScript -->
                 </div>
-                <div class="current-role-info" id="current-role-info">
-                    <!-- Rendered by JavaScript -->
-                </div>
             </div>
+        </header>
 
-            <!-- Document Queue -->
-            <div class="queue-section">
-                <div class="queue-title">
-                    <span class="material-icons-outlined" style="font-size:16px">inbox</span>
-                    Your Queue
-                </div>
-                <div id="document-queue">
-                    <!-- Rendered by JavaScript -->
-                </div>
+        <!-- ==========================================
+             MAIN LAYOUT (Sidebar + Content + Panel)
+             ========================================== -->
+        <div class="main-layout">
+
+        <!-- ==========================================
+             LEFT SIDEBAR - Case Queue
+             ========================================== -->
+        <aside class="case-sidebar collapsed" id="case-sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-title">Cases</span>
+                <button class="sidebar-toggle" onclick="toggleCaseSidebar()" title="Hide sidebar">
+                    <span class="material-icons-outlined">chevron_left</span>
+                </button>
+            </div>
+            <div class="sidebar-content" id="case-queue">
+                <!-- Rendered by JavaScript (render-queue.js) -->
             </div>
         </aside>
 
@@ -67,6 +100,10 @@
              MAIN CONTENT AREA
              ========================================== -->
         <main class="main-content">
+            <!-- Floating button to open sidebar when it's collapsed -->
+            <button class="sidebar-open-btn" id="sidebar-open-btn" onclick="toggleCaseSidebar()" title="Show cases">
+                <span class="material-icons-outlined">menu</span>
+            </button>
 
             <!-- Document Viewer -->
             <div class="doc-viewer">
@@ -101,32 +138,58 @@
                 <!-- Panel Tabs -->
                 <div class="panel-header">
                     <div class="panel-tabs">
-                        <button class="panel-tab active" data-tab="details">Details</button>
-                        <button class="panel-tab" data-tab="event-log">Activity</button>
-                        <button class="panel-tab" data-tab="documents">Documents</button>
-                        <button class="panel-tab" data-tab="ask-ai">Ask AI</button>
+                        <button class="panel-tab active" data-tab="overview" onclick="switchTab('overview')">
+                            <span class="material-icons-outlined tab-icon">home</span>
+                            <span class="tab-label">Overview</span>
+                        </button>
+                        <button class="panel-tab" data-tab="task" onclick="switchTab('task')">
+                            <span class="material-icons-outlined tab-icon">checklist</span>
+                            <span class="tab-label">Task</span>
+                        </button>
+                        <button class="panel-tab" data-tab="activity" onclick="switchTab('activity')">
+                            <span class="material-icons-outlined tab-icon">schedule</span>
+                            <span class="tab-label">Activity</span>
+                        </button>
+                        <button class="panel-tab" data-tab="comments" onclick="switchTab('comments')">
+                            <span class="material-icons-outlined tab-icon">chat_bubble_outline</span>
+                            <span class="tab-label">Comments</span>
+                        </button>
+                        <button class="panel-tab" data-tab="document" onclick="switchTab('document')">
+                            <span class="material-icons-outlined tab-icon">description</span>
+                            <span class="tab-label">Document</span>
+                        </button>
+                        <button class="panel-tab" data-tab="ask-ai" onclick="switchTab('ask-ai')">
+                            <span class="material-icons-outlined tab-icon">auto_awesome</span>
+                            <span class="tab-label">Ask AI</span>
+                        </button>
+                        <div class="tab-indicator"></div>
                     </div>
                 </div>
 
                 <!-- Panel Body -->
                 <div class="panel-body">
-                    <!-- Quick Actions -->
-                    <div class="quick-actions" id="quick-actions">
+                    <!-- Overview Tab (previously Details) -->
+                    <div class="tab-pane active" id="overview-tab">
                         <!-- Rendered by JavaScript -->
                     </div>
 
-                    <!-- Details Tab -->
-                    <div class="tab-pane active" id="details-tab">
+                    <!-- Task Tab (NEW - shows task cards for CS and AO) -->
+                    <div class="tab-pane" id="task-tab">
                         <!-- Rendered by JavaScript -->
                     </div>
 
-                    <!-- Event Log Tab -->
-                    <div class="tab-pane" id="event-log-tab">
+                    <!-- Activity Tab (previously Event Log) -->
+                    <div class="tab-pane" id="activity-tab">
                         <!-- Rendered by JavaScript -->
                     </div>
 
-                    <!-- Documents Tab -->
-                    <div class="tab-pane" id="documents-tab">
+                    <!-- Comments Tab -->
+                    <div class="tab-pane" id="comments-tab">
+                        <!-- Rendered by JavaScript -->
+                    </div>
+
+                    <!-- Document Tab (previously Documents) -->
+                    <div class="tab-pane" id="document-tab">
                         <!-- Rendered by JavaScript -->
                     </div>
 
@@ -136,17 +199,79 @@
                     </div>
                 </div>
 
-                <!-- Action Bar -->
-                <div class="action-bar" id="action-bar">
-                    <!-- Rendered by JavaScript -->
+                <!-- Task Detail Overlay (covers entire details panel including tabs) -->
+                <div class="task-detail-overlay" id="task-detail-overlay">
+                    <!-- Rendered by JavaScript when a task is selected -->
                 </div>
             </aside>
         </main>
+        </div>
     </div>
+
+    <!-- ==========================================
+         TOAST NOTIFICATIONS
+         ========================================== -->
+    <div class="toast-container" id="toast-container"></div>
 
     <!-- ==========================================
          MODALS
          ========================================== -->
+
+    <!-- Register New Case Modal (DTO creates a new case) -->
+    <div class="modal-overlay" id="register-case-modal">
+        <div class="modal" style="max-width: 520px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Register New Case</h2>
+                <button class="modal-close" onclick="closeModal('register-case-modal')">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Case Title *</label>
+                    <input type="text" class="form-input" id="register-case-title" placeholder="e.g. Budget Proposal 2026">
+                </div>
+                <div style="display:flex;gap:12px">
+                    <div class="form-group" style="flex:1">
+                        <label class="form-label">Priority</label>
+                        <select class="form-input" id="register-case-priority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:1">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" class="form-input" id="register-case-due-date">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Upload Documents</label>
+                    <label for="register-file-input" class="upload-area" id="register-upload-area">
+                        <span class="material-icons-outlined upload-icon">cloud_upload</span>
+                        <p class="upload-text">Click to select files</p>
+                        <p class="upload-hint">PDF, Word, Excel, or image files</p>
+                    </label>
+                    <input type="file" id="register-file-input" multiple
+                           accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                           style="display:none"
+                           onchange="handleRegisterFileSelect(this)">
+                    <div id="register-file-list" class="file-list"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes (optional)</label>
+                    <textarea class="form-textarea" id="register-case-notes" placeholder="Any initial notes or instructions..." rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('register-case-modal')">Cancel</button>
+                <button class="btn btn-primary" id="register-case-submit" onclick="submitRegisterCase()">
+                    <span class="material-icons-outlined" style="font-size:18px">add_circle</span>
+                    Register Case
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Send Modal -->
     <div class="modal-overlay" id="send-modal">
@@ -180,10 +305,10 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div class="upload-area" onclick="simulateFileSelect()">
+                <div class="upload-area" id="upload-modal-area" onclick="simulateFileSelect()">
                     <span class="material-icons-outlined upload-icon">cloud_upload</span>
                     <p class="upload-text">Click to select a file</p>
-                    <p class="upload-hint">PDF, Word, or Excel files</p>
+                    <p class="upload-hint">PDF, Word, Excel, or image files</p>
                 </div>
                 <div class="form-group" style="margin-top:20px">
                     <label class="form-label">Document Name</label>
@@ -209,26 +334,8 @@
                     <span class="material-icons-outlined">close</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <div class="close-case-summary">
-                    <span class="material-icons-outlined close-case-icon">verified</span>
-                    <h3 class="close-case-title">Ready to Close</h3>
-                    <p class="close-case-desc">This case will be marked as completed and archived.</p>
-                </div>
-                <div class="case-summary">
-                    <div class="summary-row">
-                        <span class="summary-label">Case ID</span>
-                        <span class="summary-value">CASE-2025-0847</span>
-                    </div>
-                    <div class="summary-row">
-                        <span class="summary-label">Title</span>
-                        <span class="summary-value">Budget Proposal 2025</span>
-                    </div>
-                    <div class="summary-row">
-                        <span class="summary-label">Status</span>
-                        <span class="summary-value" style="color:var(--success)">Approved</span>
-                    </div>
-                </div>
+            <div class="modal-body" id="close-modal-body">
+                <!-- Rendered dynamically by openCloseModal() -->
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal('close-modal')">Cancel</button>
@@ -240,25 +347,248 @@
         </div>
     </div>
 
+    <!-- Approval Modal -->
+    <div class="modal-overlay" id="approval-modal">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="approval-modal-title">Approve Document</h2>
+                <button class="modal-close" onclick="closeModal('approval-modal')">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Hidden field to track action type -->
+                <div style="display:none">
+                    <span id="approval-action-type">approve</span>
+                </div>
+
+                <div class="approval-confirmation-text">
+                    <p>Are you sure you want to <strong id="approval-action-label">approve</strong> this document?</p>
+                    <p style="font-size: 13px; color: var(--gray-600); margin-top: 8px;">
+                        This action will be logged in the activity timeline.
+                    </p>
+                </div>
+
+                <!-- Rejection reason field (hidden for approve) -->
+                <div id="approval-reason-field" class="form-group" style="margin-top: 16px; display: none;">
+                    <label class="form-label">Reason for Rejection *</label>
+                    <textarea
+                        id="approval-rejection-reason"
+                        class="form-textarea"
+                        placeholder="Explain why you are rejecting this document..."
+                        rows="4"
+                    ></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('approval-modal')">Cancel</button>
+                <button id="approval-submit-btn" class="btn btn-success" onclick="submitApproval()">
+                    <span class="material-icons-outlined">check_circle</span>
+                    Approve
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delegate Case Modal (compact card-based task assignment) -->
+    <div class="modal-overlay" id="delegate-modal">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Delegate Case</h2>
+                <button class="modal-close" onclick="closeModal('delegate-modal')">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body" id="delegate-modal-body">
+                <!-- Rendered by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('delegate-modal')">Cancel</button>
+                <button class="btn btn-primary" id="delegate-submit-btn" onclick="submitDelegate()">
+                    Delegate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Submit Modal (AO submits task for CS review) -->
+    <div class="modal-overlay" id="task-submit-modal">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="task-submit-modal-title">Complete Task</h2>
+                <button class="modal-close" onclick="closeModal('task-submit-modal')">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body" id="task-submit-modal-body">
+                <!-- Rendered by JavaScript -->
+            </div>
+            <div class="modal-footer" id="task-submit-modal-footer">
+                <div class="task-submit-hint">Nothing to add? Just hit complete.</div>
+                <div style="display:flex;gap:10px;width:100%">
+                    <button class="btn btn-secondary" style="flex:0 0 auto" onclick="closeModal('task-submit-modal')">Cancel</button>
+                    <button class="btn btn-primary" style="flex:1" id="task-submit-btn" onclick="submitTaskForReview()">
+                        <span class="material-icons-outlined" style="font-size:18px">check_circle</span>
+                        Complete Task
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attach Document Modal (AO uploads a doc to a task) -->
+    <div class="modal-overlay" id="task-attach-modal">
+        <div class="modal" style="max-width: 440px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Attach Document</h2>
+                <button class="modal-close" onclick="closeModal('task-attach-modal')">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body" id="task-attach-modal-body">
+                <!-- Rendered by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('task-attach-modal')">Cancel</button>
+                <button class="btn btn-primary" id="task-attach-btn" onclick="attachDocumentToTask()">
+                    <span class="material-icons-outlined" style="font-size:18px">file_upload</span>
+                    Attach
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Approve Modal (CS approves a task) -->
+    <div class="modal-overlay" id="task-approve-modal">
+        <div class="modal" style="max-width: 440px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Approve Task</h2>
+                <button class="modal-close" onclick="closeModal('task-approve-modal')">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="approval-confirmation-text">
+                    <p>Are you sure you want to <strong style="color:var(--success)">approve</strong> this task?</p>
+                    <p style="font-size: 13px; color: var(--gray-600); margin-top: 8px;">
+                        The Action Officer will be notified of the approval.
+                    </p>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label class="form-label">Comments (optional)</label>
+                    <textarea id="task-approve-comment" class="form-textarea" placeholder="Add any final notes..." rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('task-approve-modal')">Cancel</button>
+                <button class="btn btn-success" onclick="confirmTaskApprove()">
+                    <span class="material-icons-outlined" style="font-size:18px">check_circle</span>
+                    Approve
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Send Back Modal (CS sends task back to AO) -->
+    <div class="modal-overlay" id="task-sendback-modal">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Request Revision</h2>
+                <button class="modal-close" onclick="closeModal('task-sendback-modal')">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="padding:12px;background:#fffbeb;border-radius:var(--radius-md);margin-bottom:16px;font-size:13px;color:#92400e;">
+                    <span class="material-icons-outlined" style="font-size:16px;vertical-align:middle;margin-right:6px">edit_note</span>
+                    The Action Officer will be asked to revise and resubmit this task.
+                </div>
+                <div class="form-group">
+                    <label class="form-label">What needs to be revised? *</label>
+                    <textarea id="task-sendback-reason" class="form-textarea" placeholder="Describe what changes are needed..." rows="4"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('task-sendback-modal')">Cancel</button>
+                <button class="btn" style="background:#d97706;color:white;border:none" onclick="confirmTaskSendBack()">
+                    <span class="material-icons-outlined" style="font-size:18px">edit_note</span>
+                    Request Revision
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Task Modal (CS cancels a task with optional comment) -->
+    <div class="modal-overlay" id="cancel-task-modal">
+        <div class="modal" style="max-width: 440px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Cancel Task</h2>
+                <button class="modal-close" onclick="closeModal('cancel-task-modal')">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body" id="cancel-task-modal-body">
+                <!-- Populated dynamically by openCancelTaskModal() -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('cancel-task-modal')">Back</button>
+                <button class="btn" style="background:#ef4444;color:white;border:none" id="cancel-task-confirm-btn" onclick="confirmCancelTask()">
+                    Cancel Task
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal (CS edits task details) -->
+    <div class="modal-overlay" id="edit-task-modal">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="edit-task-modal-title">Edit Task</h2>
+                <button class="modal-close" onclick="closeModal('edit-task-modal')">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div class="modal-body" id="edit-task-modal-body">
+                <!-- Populated dynamically by openEditTaskModal() -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('edit-task-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmEditTask()">
+                    <span class="material-icons-outlined" style="font-size:18px">check</span>
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==========================================
          JAVASCRIPT FILES
          Order matters! Load in this sequence:
          1. config.js - Constants and settings
          2. state.js - Application state
-         3. render-*.js - Rendering functions
-         4. events.js - Event handlers
-         5. modals.js - Modal logic
-         6. chat.js - AI chat
-         7. app.js - Initialization (must be last)
+         3. storage.js - IndexedDB wrapper (persistence)
+         4. case-manager.js - Case lifecycle (create/switch/save)
+         5. render-*.js - Rendering functions
+         6. render-queue.js - Multi-case sidebar queue
+         7. events.js - Event handlers
+         8. modals.js - Modal logic
+         9. task-actions.js - Task action handlers
+         10. chat.js - AI chat
+         11. app.js - Initialization (must be last)
          ========================================== -->
     <script src="js/config.js"></script>
     <script src="js/state.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/case-manager.js"></script>
     <script src="js/render.js"></script>
     <script src="js/render-sections.js"></script>
     <script src="js/render-tabs.js"></script>
     <script src="js/render-documents.js"></script>
+    <script src="js/render-tasks.js"></script>
+    <script src="js/render-queue.js"></script>
     <script src="js/events.js"></script>
     <script src="js/modals.js"></script>
+    <script src="js/task-actions.js"></script>
     <script src="js/chat.js"></script>
     <script src="js/app.js"></script>
 

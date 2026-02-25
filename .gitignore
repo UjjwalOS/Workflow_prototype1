@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+dist/
+
+# Test artifacts
+test-results/
+test-screenshots/
+*.spec.js
+test-workflow.js
+check-404.js
+
+# Screenshots (test/debug artifacts in root)
+*.png
+
+# Log files
+server.log
+nul
+
+# Claude Code working files
+.claude/
+
+# Playwright MCP cache
+.playwright-mcp/
+
+# Timeline comparison (debug file)
+timeline-comparison.html
+
+# Test reports (generated)
+TEST_REPORT.md
+TEST_SUMMARY.md
+VISUAL_TEST_SUMMARY.md
