@@ -255,7 +255,7 @@ function submitTaskForReview() {
                 submittedBy: state.currentRole,
                 submittedTo: 'cs',
                 submittedAt: new Date().toISOString(),
-                inResponseTo: task.submissions.length <= 1 ? 'Initial delegation' : 'Revision request',
+                inResponseTo: task.submissions.length <= 1 ? 'Initial delegation' : 'Changes requested',
                 status: 'under-review',
                 documents: selectedDrafts.map(d => ({
                     id: d.id, name: d.name, type: d.type, size: d.size,
@@ -415,13 +415,13 @@ function confirmTaskSendBack() {
         timestamp: new Date().toISOString()
     });
 
-    // Notify the assigned AO that their task needs revision
+    // Notify the assigned AO that their task needs changes
     addNotification({
         id: 'notif-' + Date.now(),
         type: 'task_sent_back',
         icon: 'reply',
         iconColor: '#f59e0b',
-        title: `Revision requested: ${task.title}`,
+        title: `Changes requested: ${task.title}`,
         subtitle: `Workflow: ${state.caseInfo.title || 'Untitled'} · by ${ROLES.cs.name}`,
         targetRole: task.assignee,
         taskId: task.id,
@@ -440,7 +440,7 @@ function confirmTaskSendBack() {
     renderAll();
 
     const aoInfo = getAOInfo(task.assignee);
-    showToast(`Revision requested from ${aoInfo ? aoInfo.name : 'Action Officer'}`, 'success');
+    showToast(`Changes requested from ${aoInfo ? aoInfo.name : 'Action Officer'}`, 'success');
 }
 
 // ------------------------------------------

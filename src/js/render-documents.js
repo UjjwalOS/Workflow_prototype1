@@ -40,7 +40,7 @@ function renderDocumentsForCS(originalDoc, submissions, drafts, icons) {
                             <div class="submission-sender-name">${sender.name}</div>
                             <div class="submission-sender-meta">
                                 Submitted ${latestSubmission.submittedAt}
-                                ${latestSubmission.round > 1 ? `<span class="doc-revision-badge">Revision ${latestSubmission.round}</span>` : ''}
+                                ${latestSubmission.round > 1 ? `<span class="doc-revision-badge">Round ${latestSubmission.round}</span>` : ''}
                             </div>
                         </div>
                         <div class="submission-context">
@@ -193,7 +193,7 @@ function renderDocumentsForAO(originalDoc, submissions, drafts, icons) {
     // Show latest submission
     if (latestSubmission) {
         const recipient = ROLES[latestSubmission.submittedTo];
-        const statusLabel = latestSubmission.status === 'returned' ? 'Needs Revision' :
+        const statusLabel = latestSubmission.status === 'returned' ? 'Needs Changes' :
                            latestSubmission.status === 'under-review' ? 'Submitted' : 'Accepted';
         const statusClass = latestSubmission.status === 'returned' ? 'revision' : 'submitted';
 

@@ -493,7 +493,7 @@
     <div class="modal-overlay" id="task-sendback-modal">
         <div class="modal" style="max-width: 480px;">
             <div class="modal-header">
-                <h2 class="modal-title">Request Revision</h2>
+                <h2 class="modal-title">Request Changes</h2>
                 <button class="modal-close" onclick="closeModal('task-sendback-modal')">
                     <span class="material-icons-outlined">close</span>
                 </button>
@@ -501,10 +501,10 @@
             <div class="modal-body">
                 <div style="padding:12px;background:#fffbeb;border-radius:var(--radius-md);margin-bottom:16px;font-size:13px;color:#92400e;">
                     <span class="material-icons-outlined" style="font-size:16px;vertical-align:middle;margin-right:6px">edit_note</span>
-                    The Action Officer will be asked to revise and resubmit this task.
+                    The Action Officer will be asked to make changes and resubmit this task.
                 </div>
                 <div class="form-group">
-                    <label class="form-label">What needs to be revised? *</label>
+                    <label class="form-label">What needs to change? *</label>
                     <textarea id="task-sendback-reason" class="form-textarea" placeholder="Describe what changes are needed..." rows="4"></textarea>
                 </div>
             </div>
@@ -512,7 +512,7 @@
                 <button class="btn btn-secondary" onclick="closeModal('task-sendback-modal')">Cancel</button>
                 <button class="btn" style="background:#d97706;color:white;border:none" onclick="confirmTaskSendBack()">
                     <span class="material-icons-outlined" style="font-size:18px">edit_note</span>
-                    Request Revision
+                    Request Changes
                 </button>
             </div>
         </div>

@@ -77,7 +77,7 @@ function renderPendingBanner() {
         'triage': 'Triage Required',
         'urgent-review': 'Urgent Review Needed',
         'delegation': 'Tasks Delegated',
-        'revision': 'Revision Requested'
+        'revision': 'Changes Requested'
     };
 
     const subtitles = {
@@ -449,7 +449,7 @@ function renderDocumentsSection() {
                             statusLabel = `From ${doc.sender?.name || 'Unknown'}`;
                             statusClass = 'received';
                         } else if (doc.isSubmitted) {
-                            statusLabel = doc.status === 'returned' ? 'Needs Revision' : 'Submitted';
+                            statusLabel = doc.status === 'returned' ? 'Needs Changes' : 'Submitted';
                             statusClass = doc.status === 'returned' ? 'revision' : 'submitted';
                         }
 

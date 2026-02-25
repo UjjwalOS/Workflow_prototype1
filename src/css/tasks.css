@@ -1319,7 +1319,7 @@
     background: var(--success-light);
 }
 
-/* Sent back = CS wants revision (amber) */
+/* Sent back = CS wants changes (amber) */
 .td-doc-badge--sent-back {
     color: #d97706;
     background: #fffbeb;
@@ -2029,7 +2029,7 @@
 }
 
 /* Inline action text — reads as a sentence after the name.
-   e.g. "You requested a revision" or "Rohit Sharma submitted"
+   e.g. "You requested changes" or "Rohit Sharma submitted"
    Color provides scannability without needing a loud badge. */
 .td-activity-action {
     font-size: 13px;
@@ -2037,7 +2037,7 @@
     color: var(--gray-500);
 }
 
-.td-action--revision {
+.td-action--changes {
     color: #b45309; /* Warm amber — signals attention needed */
 }
 

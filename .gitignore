@@ -32,3 +32,6 @@ timeline-comparison.html
 TEST_REPORT.md
 TEST_SUMMARY.md
 VISUAL_TEST_SUMMARY.md
+
+.vercel
+.env*.local

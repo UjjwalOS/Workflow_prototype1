@@ -447,7 +447,7 @@ function renderStatusPills(counts) {
         pills += `<span class="status-pill" style="background:#fffbeb;color:#f59e0b" title="Pending Review"><span class="material-icons-outlined" style="font-size:14px">pending</span>${counts.submitted}</span>`;
     }
     if (counts.sent_back > 0) {
-        pills += `<span class="status-pill" style="background:#fffbeb;color:#d97706" title="Needs Revision"><span class="material-icons-outlined" style="font-size:14px">edit_note</span>${counts.sent_back}</span>`;
+        pills += `<span class="status-pill" style="background:#fffbeb;color:#d97706" title="Needs Changes"><span class="material-icons-outlined" style="font-size:14px">edit_note</span>${counts.sent_back}</span>`;
     }
     if (counts.completed > 0) {
         pills += `<span class="status-pill" style="background:#f0fdf4;color:#16a34a" title="Approved"><span class="material-icons-outlined" style="font-size:14px">check_circle</span>${counts.completed}</span>`;
@@ -649,9 +649,9 @@ function toggleClampedText(btn) {
 // Design rationale (for design crit):
 // - Avatars replace colored dots — the timeline is about PEOPLE, not status colors.
 //   Every entry anchors to a person, making the thread feel like a conversation.
-// - Actions are inline narrative text ("requested a revision") instead of badges.
+// - Actions are inline narrative text ("requested changes") instead of badges.
 //   This makes the timeline scannable as a story. The subtle color on the action
-//   text preserves quick visual scanning (amber = revision, green = approved)
+//   text preserves quick visual scanning (amber = changes, green = approved)
 //   without adding a loud decorative badge that competes for attention.
 // - Timestamps use real relative formatting so the timeline has temporal depth.
 
@@ -784,10 +784,10 @@ function renderSubmissionBlock(sub, task, role, csInfo) {
     if (sub.feedback) {
         const csDisplayName = role === 'cs' ? 'You' : csInfo.name;
         const actionText = sub.status === 'sent_back'
-            ? 'requested a revision'
+            ? 'requested changes'
             : sub.status === 'approved' ? 'approved this' : '';
         const actionClass = sub.status === 'sent_back'
-            ? 'td-action--revision'
+            ? 'td-action--changes'
             : sub.status === 'approved' ? 'td-action--approved' : '';
 
         html += `
@@ -1198,7 +1198,7 @@ function renderSubmissionEntry(sub, task, isLatest, viewRole) {
                 <span class="submission-time">${sub.submittedAt}</span>
             </div>
             ${sub.status === 'approved' ? `<span class="submission-badge approved"><span class="material-icons-outlined" style="font-size:14px">check_circle</span>Approved</span>` : ''}
-            ${sub.status === 'sent_back' ? `<span class="submission-badge sent-back"><span class="material-icons-outlined" style="font-size:14px">edit_note</span>Revision Requested</span>` : ''}
+            ${sub.status === 'sent_back' ? `<span class="submission-badge sent-back"><span class="material-icons-outlined" style="font-size:14px">edit_note</span>Changes Requested</span>` : ''}
         </div>
     `;
 
@@ -1315,7 +1315,7 @@ function renderTaskDetailActions(task, role) {
                     </button>
                     <button class="btn task-detail-action-btn" style="flex:1;background:#d97706;color:white;border:none;white-space:nowrap" onclick="openTaskSendBackModal('${task.id}')">
                         <span class="material-icons-outlined" style="font-size:18px">edit_note</span>
-                        Request Revision
+                        Request Changes
                     </button>
                 </div>
             `;
@@ -1337,7 +1337,7 @@ function renderTaskDetailActions(task, role) {
             html += `
                 <div class="task-detail-waiting" style="background:var(--warning-light)">
                     <span class="material-icons-outlined" style="font-size:20px;color:var(--warning)">edit_note</span>
-                    <span style="color:#92400e">Revision requested — waiting for ${getAOInfo(task.assignee)?.name || 'Action Officer'}</span>
+                    <span style="color:#92400e">Changes requested — waiting for ${getAOInfo(task.assignee)?.name || 'Action Officer'}</span>
                 </div>
             `;
         }
@@ -1369,7 +1369,7 @@ function renderTaskDetailActions(task, role) {
             html += `
                 <div class="task-detail-waiting" style="background:var(--warning-light)">
                     <span class="material-icons-outlined" style="font-size:20px;color:var(--warning)">edit_note</span>
-                    <span style="color:#92400e">Revision requested — waiting for ${aoName}</span>
+                    <span style="color:#92400e">Changes requested — waiting for ${aoName}</span>
                 </div>
             `;
         }
@@ -1649,7 +1649,7 @@ function renderTaskSubmitModal(taskId) {
     }
     if (hintEl) {
         hintEl.textContent = isResubmit
-            ? 'Please explain what changed in this revision.'
+            ? 'Briefly describe what you\'ve updated.'
             : 'Nothing to add? Just hit complete.';
         hintEl.style.color = isResubmit ? 'var(--warning)' : '';
     }

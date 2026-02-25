@@ -435,7 +435,7 @@ function submitSend() {
             submittedBy: 'ao',
             submittedTo: 'cs',
             submittedAt: new Date().toISOString(),
-            inResponseTo: round === 1 ? 'Initial delegation' : 'Revision request',
+            inResponseTo: round === 1 ? 'Initial delegation' : 'Changes requested',
             status: 'under-review',
             documents: selectedDrafts.map(d => ({
                 id: d.id,

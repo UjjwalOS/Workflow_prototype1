@@ -33,7 +33,7 @@ const TASK_STATUS = {
     IN_PROGRESS: 'in_progress', // AO has this task (new or actively working)
     SUBMITTED: 'submitted',     // AO submitted for CS review
     COMPLETED: 'completed',     // CS approved the work
-    SENT_BACK: 'sent_back',     // CS sent it back for revision
+    SENT_BACK: 'sent_back',     // CS sent it back for changes
     CANCELLED: 'cancelled'      // CS cancelled the task
 };
 
@@ -61,8 +61,8 @@ const TASK_STATUS_CONFIG = {
         dotColor: '#16a34a'
     },
     sent_back: {
-        label: 'Needs Revision',       // AO-facing label
-        labelCS: 'Revision Requested',  // CS-facing label
+        label: 'Needs Changes',        // AO-facing label
+        labelCS: 'Changes Requested',   // CS-facing label
         icon: 'rotate_left',
         color: '#d97706',       // Amber (distinct from orange Pending Review)
         bgColor: '#fffbeb',
